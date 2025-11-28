@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>DoctorX - Trang chủ</title>
+
+  <!-- Chart.js để vẽ biểu đồ tròn -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      background-image: url("/static/Theme.png");
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      color: #0b1f3b;
+    }
+
+    /* Thanh trên cùng: ô Đăng xuất (đen) */
+    .top-bar {
+      width: 100%;
+      padding: 24px 40px 0;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .btn-logout {
+      background: #000;
+      color: #fff;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+      transition: transform 0.12s ease, box-shadow 0.12s ease,
+        background 0.12s ease;
+    }
+
+    .btn-logout:hover {
+      background: #212121;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.45);
+    }
+
+    /* Ô đỏ Welcome */
+  .welcome-banner {
+  margin-top: 40px;
+  width: 80%;
+  max-width: 1100px;
+
+  /* nền đen trong suốt */
+  background: rgba(0, 0, 0, 0.55);
+
+  border-radius: 18px;
+  padding: 26px 40px;
+  color: #fff;
+
+  /* căn giữa nội dung trong ô */
+  display: flex;
+  flex-direction: column;
+  align-items: center;    /* căn ngang (trái/phải) */
+  justify-content: center;/* căn dọc (trên/dưới) */
+  text-align: center;
+
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+}
+
+    .welcome-line-1 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: 1px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .welcome-line-2 {
+      margin: 6px 0 0 0;
+      font-size: 36px;
+      font-weight: 800;
+    }
+
+    /* Hàng 3 ô trắng – to hơn, cách xa nhau hơn */
+    .metrics-row {
+      margin-top: 70px;
+      margin-bottom: 80px;
+      width: 80%;
+      max-width: 1100px;
+      display: flex;
+      justify-content: space-between;
+      gap: 40px; /* tăng khoảng cách giữa các ô */
+      flex-wrap: wrap;
+    }
+
+    .metric-card {
+      flex: 1 1 0;
+      min-width: 260px;
+      min-height: 260px;
+      background: #ffffffee;
+      border-radius: 20px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 24px;
+      text-align: center;
+    }
+
+    .metric-label {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #37474f;
+    }
+
+    .metric-main {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .metric-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: #1565c0;
+    }
+
+    .metric-caption {
+      font-size: 13px;
+      color: #607d8b;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    /* chart tròn + text giữa */
+    .metric-chart-wrapper {
+      position: relative;
+      width: 130px;
+      height: 130px;
+    }
+
+    .metric-chart {
+      width: 130px;
+      height: 130px;
+    }
+
+    .metric-center-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 16px;
+      font-weight: 700;
+      color: #1565c0;
+      white-space: nowrap;
+    }
+
+    .metric-center-text-purple {
+      color: #ab47bc;
+    }
+
+    /* Ô thứ 3: canh giữa nội dung theo chiều dọc */
+    .metric-card-days {
+      justify-content: center;
+    }
+
+    @media (max-width: 900px) {
+      .welcome-banner {
+        width: 90%;
+      }
+      .metrics-row {
+        width: 90%;
+        gap: 24px;
+      }
+      .metric-card {
+        min-width: 220px;
+        min-height: 220px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Ô đen Đăng xuất -->
+  <div class="top-bar">
+    <button class="btn-logout" id="btn-logout">Đăng xuất</button>
+  </div>
+
+  <!-- Ô đỏ Welcome -->
+  <section class="welcome-banner">
+    <p class="welcome-line-1">Welcome to the Arena of Discipline</p>
+    <p class="welcome-line-2" id="welcome-name">DoctorX</p>
+  </section>
+
+  <!-- 3 ô trắng -->
+  <section class="metrics-row">
+  <!-- 1. Tổng ml nước còn lại -->
+  <div class="metric-card" id="card-water-remaining">
+  <div class="metric-label">Nước còn lại trong ngày</div>
+
+      <div class="metric-main">
+        <div class="metric-chart-wrapper">
+          <canvas id="chart-water" class="metric-chart"></canvas>
+          <!-- số ml hiển thị ngay giữa biểu đồ -->
+          <div
+            class="metric-center-text"
+            id="water-center-text"
+          >
+            -- ml
+          </div>
+        </div>
+      </div>
+
+      <div class="metric-caption" id="metric-water-summary">
+        Chưa có dữ liệu hôm nay.
+      </div>
+    </div>
+
+    <!-- 2. Số lần uống / mục tiêu -->
+    <div class="metric-card">
+      <div class="metric-label">Số lần uống / mục tiêu</div>
+
+      <div class="metric-main">
+        <div class="metric-chart-wrapper">
+          <canvas id="chart-times" class="metric-chart"></canvas>
+          <!-- số lần / mục tiêu nằm giữa biểu đồ -->
+          <div
+            class="metric-center-text metric-center-text-purple"
+            id="times-center-text"
+          >
+            -- / --
+          </div>
+        </div>
+      </div>
+
+      <div class="metric-caption">
+        Tính trong ngày hôm nay.
+      </div>
+    </div>
+
+    <!-- 3. Số ngày đã thực hiện -->
+    <div class="metric-card metric-card-days">
+      <div class="metric-label">Số ngày đã thực hiện</div>
+
+      <div class="metric-main">
+        <div class="metric-value" id="metric-days">--</div>
+      </div>
+
+      <div class="metric-caption">
+        Số ngày có ít nhất một lần uống nước được ghi lại.
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // ==== CẤU HÌNH CƠ BẢN ====
+    const DAILY_TARGET_ML = 2000;    // mục tiêu ml/ngày
+    const DAILY_TARGET_TIMES = 8;    // mục tiêu số lần uống/ngày
+
+    // ==== TOKEN & TÊN USER ====
+const token = localStorage.getItem("access_token");
+const userEmail = localStorage.getItem("user_email");
+
+if (!token) {
+  window.location.href = "/app";
+}
+
+const welcomeNameEl = document.getElementById("welcome-name");
+if (userEmail) {
+  const namePart = userEmail.split("@")[0];
+  welcomeNameEl.textContent = namePart || userEmail;
+}
+
+// Click vào ô "Nước còn lại trong ngày" -> sang trang chi tiết
+const cardWater = document.getElementById("card-water-remaining");
+if (cardWater) {
+  cardWater.style.cursor = "pointer";
+  cardWater.addEventListener("click", () => {
+    window.location.href = "/water-detail";
+  });
+}
+
+document.getElementById("btn-logout").addEventListener("click", () => {
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("user_email");
+  window.location.href = "/app";
+});
+
+    // ==== CHART ==== 
+    let chartWater = null;
+    let chartTimes = null;
+
+    function createOrUpdateDoughnut(chartRef, ctx, value, max, colorMain) {
+      const safeMax = max <= 0 ? 1 : max;
+      const v = Math.min(Math.max(value, 0), safeMax);
+      const remain = safeMax - v;
+
+      const data = {
+        labels: ["Đã đạt", "Còn lại"],
+        datasets: [
+          {
+            data: [v, remain],
+            backgroundColor: [colorMain, "#e0e0e0"],
+            borderWidth: 0,
+          },
+        ],
+      };
+
+      const options = {
+        cutout: "70%",
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: true },
+        },
+      };
+
+      if (chartRef && chartRef instanceof Chart) {
+        chartRef.data = data;
+        chartRef.options = options;
+        chartRef.update();
+        return chartRef;
+      } else {
+        return new Chart(ctx, {
+          type: "doughnut",
+          data,
+          options,
+        });
+      }
+    }
+
+    // ==== LOAD METRICS TỪ BACKEND ====
+    async function loadMetrics() {
+      const waterCenterTextEl = document.getElementById("water-center-text");
+      const waterSummaryEl   = document.getElementById("metric-water-summary");
+      const timesCenterTextEl = document.getElementById("times-center-text");
+      const daysEl = document.getElementById("metric-days");
+
+      try {
+        // 1. Lấy danh sách thiết bị
+        const devResp = await fetch("/devices", {
+          headers: { Authorization: "Bearer " + token },
+        });
+
+        if (!devResp.ok) {
+          waterSummaryEl.textContent =
+            "Không lấy được thiết bị (" + devResp.status + ")";
+          return;
+        }
+
+        const devices = await devResp.json();
+        if (!devices || devices.length === 0) {
+          waterSummaryEl.textContent = "Chưa có thiết bị nào.";
+          waterCenterTextEl.textContent = DAILY_TARGET_ML + " ml";
+          timesCenterTextEl.textContent = `0 / ${DAILY_TARGET_TIMES}`;
+          daysEl.textContent = "0";
+
+          const ctxW = document.getElementById("chart-water").getContext("2d");
+          chartWater = createOrUpdateDoughnut(
+            chartWater,
+            ctxW,
+            0,
+            DAILY_TARGET_ML,
+            "#42a5f5"
+          );
+          const ctxT = document.getElementById("chart-times").getContext("2d");
+          chartTimes = createOrUpdateDoughnut(
+            chartTimes,
+            ctxT,
+            0,
+            DAILY_TARGET_TIMES,
+            "#ab47bc"
+          );
+          return;
+        }
+
+        const firstDeviceId = devices[0].device_id;
+
+        // 2. Lấy telemetry
+        const telResp = await fetch(
+          `/devices/${encodeURIComponent(firstDeviceId)}/telemetry`,
+          {
+            headers: { Authorization: "Bearer " + token },
+          }
+        );
+
+        if (!telResp.ok) {
+          waterSummaryEl.textContent =
+            "Không tải được dữ liệu (" + telResp.status + ")";
+          return;
+        }
+
+        const list = await telResp.json();
+        if (!Array.isArray(list) || list.length === 0) {
+          waterSummaryEl.textContent = "Chưa có dữ liệu telemetry.";
+          waterCenterTextEl.textContent = DAILY_TARGET_ML + " ml";
+          timesCenterTextEl.textContent = `0 / ${DAILY_TARGET_TIMES}`;
+          daysEl.textContent = "0";
+
+          const ctxW = document.getElementById("chart-water").getContext("2d");
+          chartWater = createOrUpdateDoughnut(
+            chartWater,
+            ctxW,
+            0,
+            DAILY_TARGET_ML,
+            "#42a5f5"
+          );
+          const ctxT = document.getElementById("chart-times").getContext("2d");
+          chartTimes = createOrUpdateDoughnut(
+            chartTimes,
+            ctxT,
+            0,
+            DAILY_TARGET_TIMES,
+            "#ab47bc"
+          );
+          return;
+        }
+
+        const today = new Date();
+        const todayStr = today.toISOString().slice(0, 10);
+
+        let totalMlToday = 0;
+        let drinkTimesToday = 0;
+        const daySet = new Set();
+
+        list.forEach((t) => {
+          if (!t.ts) return;
+
+          const dateStr = t.ts.slice(0, 10);
+          daySet.add(dateStr);
+
+          const isWaterMetric =
+            t.metric_type === "water_intake_ml" ||
+            t.metric_type === "water_intake";
+
+          if (isWaterMetric && dateStr === todayStr) {
+            let ml = 0;
+            if (typeof t.value === "number") {
+              ml = t.value;
+            } else if (t.payload && t.payload.volume_ml) {
+              ml = Number(t.payload.volume_ml) || 0;
+            }
+            totalMlToday += ml;
+            drinkTimesToday += 1;
+          }
+        });
+
+        // Nước còn lại
+        const leftMl = Math.max(DAILY_TARGET_ML - totalMlToday, 0);
+        waterCenterTextEl.textContent =
+          leftMl.toLocaleString("vi-VN") + " ml";
+
+        waterSummaryEl.textContent =
+          totalMlToday.toLocaleString("vi-VN") +
+          " / " +
+          DAILY_TARGET_ML.toLocaleString("vi-VN") +
+          " ml đã uống hôm nay.";
+
+        // Số lần uống / mục tiêu
+        timesCenterTextEl.textContent =
+          `${drinkTimesToday} / ${DAILY_TARGET_TIMES}`;
+
+        // Số ngày đã thực hiện
+        daysEl.textContent = daySet.size;
+
+        // Cập nhật biểu đồ
+        const ctxW = document.getElementById("chart-water").getContext("2d");
+        chartWater = createOrUpdateDoughnut(
+          chartWater,
+          ctxW,
+          totalMlToday,
+          DAILY_TARGET_ML,
+          "#42a5f5"
+        );
+
+        const ctxT = document.getElementById("chart-times").getContext("2d");
+        chartTimes = createOrUpdateDoughnut(
+          chartTimes,
+          ctxT,
+          drinkTimesToday,
+          DAILY_TARGET_TIMES,
+          "#ab47bc"
+        );
+      } catch (err) {
+        console.error(err);
+        waterSummaryEl.textContent = "Lỗi khi tải dữ liệu: " + err;
+      }
+    }
+
+    loadMetrics();
+  </script>
+</body>
+</html>

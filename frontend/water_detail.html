@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>DoctorX - Chi tiết uống nước</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: url("Theme.png") center/cover no-repeat fixed;
+      color: #0f172a;
+    }
+
+    .overlay {
+      min-height: 100vh;
+      background: linear-gradient(
+        to bottom,
+        rgba(15, 23, 42, 0.6),
+        rgba(15, 23, 42, 0.4)
+      );
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+    }
+
+    .top-bar {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      color: #f9fafb;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #020617;
+      color: #f9fafb;
+    }
+
+    .card {
+     width: 100%;
+    max-width: 1100px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+    min-height: 500px; /* THÊM DÒNG NÀY */
+    }
+
+
+    h1 {
+      margin: 0 0 16px;
+      font-size: 26px;
+    }
+
+    #no-data {
+      margin-top: 12px;
+      font-size: 14px;
+      color: #64748b;
+      text-align: center;
+    }
+
+    .chart-wrapper {
+      width: 100%;
+      height: 380px;
+    }
+    #water-bar-chart {
+    width: 100% !important;
+        height: 100% !important;
+    }
+
+    @media (max-width: 768px) {
+      .overlay { padding: 16px; }
+      .card { padding: 16px; border-radius: 18px; }
+      h1 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay">
+    <div class="top-bar">
+      <button class="btn" id="btn-back">&larr; Quay lại dashboard</button>
+      <div>
+        <span id="user-email"></span>
+        <button class="btn" id="btn-logout">Đăng xuất</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h1>Chi tiết các lần uống nước</h1>
+
+      <div class="chart-wrapper">
+        <canvas id="water-bar-chart"></canvas>
+      </div>
+      <div id="no-data">Chưa có dữ liệu trong ngày</div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("access_token");
+    const userEmail = localStorage.getItem("user_email");
+
+    if (!token) {
+      window.location.href = "/app";
+    }
+
+    document.getElementById("user-email").textContent = userEmail || "";
+    document.getElementById("btn-logout").onclick = () => {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("user_email");
+      window.location.href = "/app";
+    };
+    document.getElementById("btn-back").onclick = () => {
+      window.location.href = "/dashboard";
+    };
+
+    const noDataEl = document.getElementById("no-data");
+    let barChart = null;
+
+    async function fetchDevices() {
+      const res = await fetch("/devices", {
+        headers: { Authorization: "Bearer " + token }
+      });
+      if (!res.ok) {
+        noDataEl.textContent = "Không lấy được danh sách thiết bị: " + res.status;
+        noDataEl.style.display = "block";
+        return [];
+      }
+      const devices = await res.json();
+      return devices;
+    }
+
+    async function loadChartForToday(deviceId) {
+      if (!deviceId) {
+        noDataEl.textContent = "Chưa có dữ liệu trong ngày";
+        noDataEl.style.display = "block";
+        return;
+      }
+
+      const res = await fetch(`/devices/${deviceId}/telemetry?limit=300`, {
+        headers: { Authorization: "Bearer " + token }
+      });
+
+      if (!res.ok) {
+        noDataEl.textContent = "Lỗi khi lấy telemetry: " + res.status;
+        noDataEl.style.display = "block";
+        return;
+      }
+
+      const data = await res.json();
+      const todayStr = new Date().toISOString().slice(0, 10);
+
+      const filtered = data
+        .filter((t) => {
+          if (!t.ts) return false;
+          const dateStr = t.ts.slice(0, 10);
+          const isWater =
+            t.metric_type === "water_intake_ml" ||
+            t.metric_type === "water_intake";
+          return isWater && dateStr === todayStr;
+        })
+        .map((t) => {
+          let ml = 0;
+          if (typeof t.value === "number") {
+            ml = t.value;
+          } else if (t.payload && t.payload.volume_ml) {
+            ml = Number(t.payload.volume_ml) || 0;
+          }
+          return { ts: t.ts, ml };
+        })
+        .sort((a, b) => new Date(a.ts) - new Date(b.ts));
+
+      if (filtered.length === 0) {
+        if (barChart) {
+          barChart.destroy();
+          barChart = null;
+        }
+        noDataEl.textContent = "Chưa có dữ liệu uống nước hôm nay.";
+        noDataEl.style.display = "block";
+        return;
+      }
+
+      noDataEl.style.display = "none";
+
+      const labels = filtered.map((item) =>
+        new Date(item.ts).toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      );
+      const values = filtered.map((item) => item.ml);
+
+      const ctx = document.getElementById("water-bar-chart").getContext("2d");
+      if (barChart) barChart.destroy();
+
+      barChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "Lượng nước mỗi lần (ml)",
+              data: values,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: "Thời gian uống",
+              },
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: "ml",
+              },
+            },
+          },
+        },
+      });
+    }
+
+    (async function init() {
+      const devices = await fetchDevices();
+      if (!devices || devices.length === 0) {
+        noDataEl.textContent = "Chưa có dữ liệu trong ngày";
+        noDataEl.style.display = "block";
+        return;
+      }
+      const firstDeviceId = devices[0].device_id;
+      await loadChartForToday(firstDeviceId);
+    })();
+  </script>
+</body>
+</html>
