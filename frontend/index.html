@@ -8,71 +8,54 @@
       box-sizing: border-box;
     }
     body {
-     margin: 0;
-    padding: 0;
-    font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-   justify-content: flex-start;  /* thay vì center */
-   padding-top: 200px;            /* chỉnh con số này để khung xuống đúng vạch đỏ trên */
-   padding-bottom: 40px;         /* cho dưới đỡ dính mép */
-
-  /* NỀN: ẢNH HỒ NƯỚC */
-     background-image: url("/static/Theme.png");
-     background-size: cover;
-}
-#auth-card label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #0b1f3b;      /* cùng tông xanh đậm */
-}
+      margin: 0;
+      padding: 0;
+      font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 200px;
+      padding-bottom: 40px;
+      background-image: url("/static/Theme.png");
+      background-size: cover;
+    }
 
     .portal-wrapper {
-     width: 900px;
-     max-width: 95vw;
+      width: 900px;
+      max-width: 95vw;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 18px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      position: relative;
+      overflow: visible;
+    }
 
-  /* NỀN TRONG SUỐT KIỂU GLASS */
-     background: rgba(255, 255, 255, 0.18);        /* chỉnh 0.0–0.3 tùy bạn */
-     border-radius: 18px;
-    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
-    backdrop-filter: blur(12px);                   /* hiệu ứng mờ nền phía sau */
-    -webkit-backdrop-filter: blur(12px);
-
-     display: flex;
-    position: relative;   /* để logo bám theo khung */
-     overflow: visible;    /* cho logo thò ra ngoài, không bị cắt */
-}
-#auth-card {
-  position: relative;
-}
-    /* BÊN TRÁI – BRAND */
     .portal-left {
       width: 40%;
       background: linear-gradient(135deg, #42a5f5, #1e88e5);
       color: #fff;
       padding: 40px 40px 40px 60px;
-      display: none;
+      display: none; /* tạm ẩn nếu bạn chưa muốn dùng bên trái */
       flex-direction: column;
       justify-content: center;
       position: relative;
     }
-.portal-left-content {
-  max-width: 360px;      /* giới hạn chiều rộng khối chữ */
-}
 
-.portal-logo {
-  font-size: 32px;
-  font-weight: 800;
-  line-height: 1.4;
-}
+    .portal-left-content {
+      max-width: 360px;
+    }
 
     .portal-logo {
       font-size: 26px;
       font-weight: 800;
       letter-spacing: 1px;
       margin-bottom: 24px;
+      line-height: 1.4;
     }
 
     .portal-title {
@@ -103,44 +86,63 @@
       box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.3);
     }
 
-.portal-left-circle-inner {
-  width: 90px;              /* rộng hơn chút cho logo */
-  height: 90px;
-  border-radius: 50%;
-  background: #ffffff;      /* nền trắng cho sạch, không đè màu lên logo */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;         /* cắt phần logo thừa để tròn gọn */
-}
-    /* BÊN PHẢI – AUTH + DASHBOARD */
+    .portal-left-circle-inner {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .logo-doctorx {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+    }
+
     .portal-right {
       width: 100%;
-      padding: 32px 40px;
+      padding: 32px 40px 40px;
       display: flex;
       flex-direction: column;
       justify-content: center;
+      position: relative;
     }
 
-.hello-title {
-  font-size: 32px;
-  font-weight: 800;
-  text-align: center;
-  color: #1565c0;
-  margin-top: 40;        /* khoảng cách từ logo xuống chữ */
-  margin-bottom: 8px;
-}
+    #auth-card {
+      position: relative;
+    }
+
+    .hello-title {
+      font-size: 32px;
+      font-weight: 800;
+      text-align: center;
+      color: #1565c0;
+      margin-top: 40px;
+      margin-bottom: 8px;
+    }
 
     .hello-sub {
-    margin-top: 4px;
-     margin-bottom: 24px;
-    font-size: 14px;
-    color: #0b1f3b;      /* xanh đậm, rất dễ đọc */
-    text-align: center;
+      margin-top: 4px;
+      margin-bottom: 24px;
+      font-size: 14px;
+      color: #0b1f3b;
+      text-align: center;
     }
 
     .form-group {
       margin-bottom: 14px;
+    }
+
+    #auth-card label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #0b1f3b;
     }
 
     label {
@@ -209,7 +211,10 @@
       text-align: center;
     }
 
-    
+    .toggle-link:hover {
+      text-decoration: underline;
+    }
+
     .auth-extra-links {
       margin-top: 8px;
       font-size: 13px;
@@ -223,10 +228,6 @@
     }
 
     .auth-extra-links a:hover {
-      text-decoration: underline;
-    }
-
-    .toggle-link:hover {
       text-decoration: underline;
     }
 
@@ -273,13 +274,6 @@
       background: #fff;
       min-width: 220px;
     }
-    .logo-doctorx {
-     width: 90px;              /* bằng kích thước container */
-     height: 90px;
-     border-radius: 50%;       /* logo thành hình tròn */
-    object-fit: cover;        /* crop vừa khít, không méo */
-    display: block;
-    }
 
     .section-block {
       margin-bottom: 18px;
@@ -318,13 +312,41 @@
       max-height: 160px;
       overflow: auto;
       box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
-      display: none;
+      display: none; /* bật lên nếu muốn xem log */
     }
 
     .log-card-title {
       color: #fff;
       font-weight: 600;
       margin-bottom: 6px;
+    }
+
+    /* Logo tròn nổi phía trên khung */
+    .auth-logo-float {
+      position: absolute;
+      top: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+    }
+
+    .auth-logo-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: #ffffffee;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    }
+
+    .auth-logo-circle img {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
     }
 
     @media (max-width: 900px) {
@@ -341,113 +363,35 @@
         display: none;
       }
     }
-.auth-logo-row {
-  display: flex;
-  justify-content: center;
-  margin-top: 16px;      /* khoảng cách với mép trên khung */
-  margin-bottom: 8px;    /* khoảng cách với chữ XIN CHÀO */
-}
-
-/* Vòng tròn logo */
-.auth-logo-circle {
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  background: #ffffffee;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-}
-
-/* Hình logo bên trong */
-.auth-logo-circle img {
-  width: 62px;
-  height: 62px;
-  border-radius: 50%;
-  object-fit: cover;
-  display: block;
-}
-
-.auth-logo-circle {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: #ffffffee;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-}
-
-.auth-logo-circle img {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  object-fit: cover;
-  display: block;
-}
-.auth-logo-float {
-  position: absolute;
-  top: -80px;                 /* logo cao 72px → -36 = nửa ở ngoài */
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-}
-
-.auth-logo-circle {
-  width: 120px;
-  height: 120px;
-  border-radius:50%;
-  background: #ffffffee;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-}
-
-.auth-logo-circle img {
-  width: 110px;
-  height: 110px;
-  border-radius: 50%;
-  object-fit: cover;
-  display: block;
-}
   </style>
 </head>
 <body>
 <div class="portal-wrapper">
-    
-  <!-- TRÁI: BRAND -->
+  <!-- BÊN TRÁI: BRAND (có thể dùng sau) -->
   <div class="portal-left">
-<div class="portal-logo">
-  Welcome to the arena of discipline
-</div>
-
-<div class="portal-left-circle">
-  <div class="portal-left-circle-inner">
-    <img src="/static/doctorx_logo.png" alt="DoctorX logo" class="logo-doctorx" />
-  </div>
-</div>
-
-  </div>
-
-  <!-- PHẢI: AUTH + DASHBOARD -->
-<div class="portal-right">
-  <div id="auth-card">
-
-    <!-- LOGO DoctorX ngay trên XIN CHÀO -->
-    <div class="auth-logo-float">
-      <div class="auth-logo-circle">
-        <img src="/static/doctorx_logo.png" alt="DoctorX logo" />
+    <div class="portal-logo">
+      Welcome to the arena of discipline
+    </div>
+    <div class="portal-left-circle">
+      <div class="portal-left-circle-inner">
+        <img src="/static/doctorx_logo.png" alt="DoctorX logo" class="logo-doctorx" />
       </div>
     </div>
+  </div>
+
+  <!-- BÊN PHẢI: AUTH + DASHBOARD -->
   <div class="portal-right">
     <div id="auth-card">
-    <h1 class="hello-title">XIN CHÀO!</h1>
-    <p class="hello-sub">
-      Đăng nhập để sử dụng hệ thống. Nếu chưa có tài khoản, hãy đăng ký trước nhé.
-    </p>
+      <div class="auth-logo-float">
+        <div class="auth-logo-circle">
+          <img src="/static/doctorx_logo.png" alt="DoctorX logo" />
+        </div>
+      </div>
+
+      <h1 class="hello-title">XIN CHÀO!</h1>
+      <p class="hello-sub">
+        Đăng nhập để sử dụng hệ thống. Nếu chưa có tài khoản, hãy đăng ký trước nhé.
+      </p>
 
       <!-- LOGIN FORM -->
       <div id="login-section">
@@ -467,10 +411,10 @@
         </div>
         <button class="primary-btn" onclick="login()">ĐĂNG NHẬP</button>
         <div class="auth-extra-links">
-        <a href="/forgot-password">Quên mật khẩu?</a>
-         <span>•</span>
-           <a href="#" onclick="forgotEmail(event)">Quên tài khoản?</a>
-            </div>
+          <a href="/forgot-password">Quên mật khẩu?</a>
+          <span>•</span>
+          <a href="#" onclick="forgotEmail(event)">Quên tài khoản?</a>
+        </div>
 
         <div class="toggle-link" onclick="showRegister()">
           Chưa có tài khoản? <b>Đăng ký</b>
@@ -593,7 +537,8 @@
 </div>
 
 <script>
-  // Gọi cùng domain với backend (127.0.0.1 hoặc ngrok)
+  // Gọi cùng domain với backend (local hoặc Render)
+  // "" nghĩa là dùng origin hiện tại (tự động đúng cho cả 127.0.0.1 và onrender.com)
   const API_BASE = "";
 
   let accessToken = null;
@@ -655,7 +600,7 @@
     }
     try {
       const body = new URLSearchParams();
-      body.append("username", email); // backend dùng username = email
+      body.append("username", email);
       body.append("password", pass);
 
       const res = await fetch(API_BASE + "/auth/login", {
