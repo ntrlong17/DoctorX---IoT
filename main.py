@@ -40,7 +40,7 @@ Base = declarative_base()
 # ======================
 # BẢO MẬT (PASSWORD & JWT)
 # ======================
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 SECRET_KEY = "super_secret_key_change_me"  # đổi khi deploy thật
@@ -211,10 +211,15 @@ def get_db():
 
 def get_password_hash(password: str) -> str:
     # bcrypt giới hạn 72 bytes, mình giới hạn 72 ký tự cho đơn giản
-    if len(password) > 72:
+    if len(password) < 6:
         raise HTTPException(
             status_code=400,
-            detail="Mật khẩu không được dài hơn 72 ký tự."
+            detail="Mật khẩu phải từ 6 ký tự trở lên."
+        )
+    if len(password) > 128:
+        raise HTTPException(
+            status_code=400,
+            detail="Mật khẩu không được dài hơn 128 ký tự."
         )
     return pwd_context.hash(password)
 
