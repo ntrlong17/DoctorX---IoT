@@ -15,15 +15,24 @@ from passlib.context import CryptContext
 import secrets
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
+import os
 from fastapi.responses import RedirectResponse
+from fastapi import HTTPException
 
 # ======================
 # CẤU HÌNH DB
 # ======================
-DATABASE_URL = "sqlite:///./iot_platform.db"
+DEFAULT_DB_URL = "sqlite:///./iot_platform.db"
+DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_DB_URL)
+
+# Nếu dùng SQLite thì mới cần connect_args
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
 
 engine = create_engine(
-    DATABASE_URL, connect_args={"check_same_thread": False}
+    DATABASE_URL,
+    connect_args=connect_args,
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
@@ -201,6 +210,12 @@ def get_db():
 
 
 def get_password_hash(password: str) -> str:
+    # bcrypt giới hạn 72 bytes, mình giới hạn 72 ký tự cho đơn giản
+    if len(password) > 72:
+        raise HTTPException(
+            status_code=400,
+            detail="Mật khẩu không được dài hơn 72 ký tự."
+        )
     return pwd_context.hash(password)
 
 

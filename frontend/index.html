@@ -402,13 +402,19 @@
             <input type="email" id="login-email" placeholder="Nhập email của bạn" />
           </div>
         </div>
-        <div class="form-group">
-          <label>Mật khẩu</label>
-          <div class="input-wrapper">
-            <span class="icon">🔒</span>
-            <input type="password" id="login-pass" placeholder="Nhập mật khẩu" />
-          </div>
-        </div>
+<div class="form-group">
+  <label>Mật khẩu</label>
+  <div class="input-wrapper">
+    <span class="icon">🔒</span>
+    <input
+      type="password"
+      id="login-pass"
+      placeholder="Nhập mật khẩu"
+      maxlength="72"
+    />
+  </div>
+</div>
+
         <button class="primary-btn" onclick="login()">ĐĂNG NHẬP</button>
         <div class="auth-extra-links">
           <a href="/forgot-password">Quên mật khẩu?</a>
@@ -430,13 +436,19 @@
             <input type="email" id="reg-email" placeholder="Nhập email để đăng ký" />
           </div>
         </div>
-        <div class="form-group">
-          <label>Mật khẩu</label>
-          <div class="input-wrapper">
-            <span class="icon">🔑</span>
-            <input type="password" id="reg-pass" placeholder="Tối thiểu 6 ký tự" />
-          </div>
-        </div>
+<div class="form-group">
+  <label>Mật khẩu</label>
+  <div class="input-wrapper">
+    <span class="icon">🔑</span>
+    <input
+      type="password"
+      id="reg-pass"
+      placeholder="Tối thiểu 6 ký tự"
+      maxlength="72"
+    />
+  </div>
+</div>
+
         <button class="primary-btn" onclick="register()">ĐĂNG KÝ</button>
         <div class="toggle-link" onclick="showLogin()">
           Đã có tài khoản? <b>Đăng nhập</b>
