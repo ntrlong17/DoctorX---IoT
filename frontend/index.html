@@ -7,19 +7,23 @@
     * {
       box-sizing: border-box;
     }
+
     body {
       margin: 0;
       padding: 0;
       font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       min-height: 100vh;
+
+      /* căn giữa khối login */
       display: flex;
-      flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      padding-top: 200px;
-      padding-bottom: 40px;
-      background-image: url("/static/Theme.png");
+      justify-content: center;
+
+      background-color: #020617;
       background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
     }
 
     .portal-wrapper {
@@ -242,63 +246,6 @@
       text-align: center;
     }
 
-    /* DASHBOARD */
-    #dashboard-card {
-      margin-top: 24px;
-      border-top: 1px solid #eee;
-      padding-top: 18px;
-    }
-
-    .section-title {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: #333;
-    }
-
-    .section-sub {
-      font-size: 13px;
-      margin-bottom: 12px;
-      color: #666;
-    }
-
-    input, select {
-      font-family: inherit;
-    }
-
-    select {
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid #d0d7de;
-      font-size: 13px;
-      background: #fff;
-      min-width: 220px;
-    }
-
-    .section-block {
-      margin-bottom: 18px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-      margin-top: 8px;
-    }
-
-    th, td {
-      border: 1px solid #e0e0e0;
-      padding: 4px 6px;
-    }
-
-    th {
-      background: #f5f5f5;
-    }
-
-    .status-low { color: #c62828; font-weight: 600; }
-    .status-almost { color: #ef6c00; font-weight: 600; }
-    .status-done { color: #2e7d32; font-weight: 600; }
-
     /* LOG CLIENT */
     .log-card {
       width: 1100px;
@@ -349,6 +296,22 @@
       display: block;
     }
 
+    .realtime-clock {
+      position: fixed;      /* dính theo màn hình */
+      right: 20px;          /* cách mép phải 20px */
+      bottom: 20px;         /* cách mép dưới 20px */
+      z-index: 9999;        /* nằm trên mọi thứ */
+
+      padding: 12px 26px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.85);
+      color: #e5e7eb;
+      font-size: 18px;
+      font-weight: 500;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(10px);
+    }
+
     @media (max-width: 900px) {
       .portal-wrapper {
         flex-direction: column;
@@ -366,506 +329,253 @@
   </style>
 </head>
 <body>
-<div class="portal-wrapper">
-  <!-- BÊN TRÁI: BRAND (có thể dùng sau) -->
-  <div class="portal-left">
-    <div class="portal-logo">
-      Welcome to the arena of discipline
-    </div>
-    <div class="portal-left-circle">
-      <div class="portal-left-circle-inner">
-        <img src="/static/doctorx_logo.png" alt="DoctorX logo" class="logo-doctorx" />
+  <div class="portal-wrapper">
+    <!-- BÊN TRÁI: BRAND (có thể dùng sau) -->
+    <div class="portal-left">
+      <div class="portal-logo">
+        Welcome to the arena of discipline
+      </div>
+      <div class="portal-left-circle">
+        <div class="portal-left-circle-inner">
+          <img src="/static/doctorx_logo.png" alt="DoctorX logo" class="logo-doctorx" />
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- BÊN PHẢI: AUTH + DASHBOARD -->
-  <div class="portal-right">
-    <div id="auth-card">
-      <div class="auth-logo-float">
-        <div class="auth-logo-circle">
-          <img src="/static/doctorx_logo.png" alt="DoctorX logo" />
-        </div>
-      </div>
-
-      <h1 class="hello-title">XIN CHÀO!</h1>
-      <p class="hello-sub">
-        Đăng nhập để sử dụng hệ thống. Nếu chưa có tài khoản, hãy đăng ký trước nhé.
-      </p>
-
-      <!-- LOGIN FORM -->
-      <div id="login-section">
-        <div class="form-group">
-          <label>Email</label>
-          <div class="input-wrapper">
-            <span class="icon">👤</span>
-            <input type="email" id="login-email" placeholder="Nhập email của bạn" />
+    <!-- BÊN PHẢI: AUTH -->
+    <div class="portal-right">
+      <div id="auth-card">
+        <div class="auth-logo-float">
+          <div class="auth-logo-circle">
+            <img src="/static/doctorx_logo.png" alt="DoctorX logo" />
           </div>
         </div>
-<div class="form-group">
-  <label>Mật khẩu</label>
-  <div class="input-wrapper">
-    <span class="icon">🔒</span>
-    <input
-      type="password"
-      id="login-pass"
-      placeholder="Nhập mật khẩu"
-      maxlength="72"
-    />
-  </div>
-</div>
 
-        <button class="primary-btn" onclick="login()">ĐĂNG NHẬP</button>
-        <div class="auth-extra-links">
-          <a href="/forgot-password">Quên mật khẩu?</a>
-          <span>•</span>
-          <a href="#" onclick="forgotEmail(event)">Quên tài khoản?</a>
-        </div>
-
-        <div class="toggle-link" onclick="showRegister()">
-          Chưa có tài khoản? <b>Đăng ký</b>
-        </div>
-      </div>
-
-      <!-- REGISTER FORM -->
-      <div id="register-section" class="hidden">
-        <div class="form-group">
-          <label>Email</label>
-          <div class="input-wrapper">
-            <span class="icon">📧</span>
-            <input type="email" id="reg-email" placeholder="Nhập email để đăng ký" />
-          </div>
-        </div>
-<div class="form-group">
-  <label>Mật khẩu</label>
-  <div class="input-wrapper">
-    <span class="icon">🔑</span>
-    <input
-      type="password"
-      id="reg-pass"
-      placeholder="Tối thiểu 6 ký tự"
-      maxlength="72"
-    />
-  </div>
-</div>
-
-        <button class="primary-btn" onclick="register()">ĐĂNG KÝ</button>
-        <div class="toggle-link" onclick="showLogin()">
-          Đã có tài khoản? <b>Đăng nhập</b>
-        </div>
-      </div>
-
-      <p class="small-text" id="auth-status"></p>
-    </div>
-
-    <!-- DASHBOARD (sau khi login) -->
-    <div id="dashboard-card" class="hidden">
-      <div class="section-block">
-        <div class="section-title">Xin chào, <span id="current-email"></span></div>
-        <div class="section-sub">
-          Quản lý thiết bị đo nước, xem log và tổng lượng nước uống theo ngày.
-        </div>
-        <button class="primary-btn" onclick="logout()">ĐĂNG XUẤT</button>
-      </div>
-
-      <div class="section-block">
-        <div class="section-title">1. Tạo thiết bị mới</div>
-        <div class="section-sub">
-          Mỗi “cốc” hoặc hệ thống đo nước tương ứng với một device.
-        </div>
-        <div class="form-group">
-          <label>Device ID</label>
-          <div class="input-wrapper">
-            <span class="icon">🏷</span>
-            <input type="text" id="dev-id" placeholder="vd: water_dev_01" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Tên hiển thị</label>
-          <div class="input-wrapper">
-            <span class="icon">📌</span>
-            <input type="text" id="dev-name" placeholder="vd: Cốc nước bàn làm việc" />
-          </div>
-        </div>
-        <button class="primary-btn" onclick="createDevice()">TẠO DEVICE</button>
-        <p class="small-text">
-          API key của device đang chọn:
-          <b><span id="dev-api-key"></span></b>
+        <h1 class="hello-title">XIN CHÀO!</h1>
+        <p class="hello-sub">
+          Đăng nhập để sử dụng hệ thống. Nếu chưa có tài khoản, hãy đăng ký trước nhé.
         </p>
-      </div>
 
-      <div class="section-block">
-        <div class="section-title">2. Danh sách thiết bị</div>
-        <button class="primary-btn" style="padding: 6px 18px; font-size: 13px;" onclick="loadDevices()">
-          Tải danh sách devices
-        </button>
-        <div style="margin-top:8px;">
-          <label>Chọn device</label>
-          <select id="device-select" onchange="onDeviceChange()">
-            <option value="">-- Chưa chọn --</option>
-          </select>
-        </div>
-      </div>
+        <!-- LOGIN FORM -->
+        <div id="login-section">
+          <div class="form-group">
+            <label>Email</label>
+            <div class="input-wrapper">
+              <span class="icon">👤</span>
+              <input type="email" id="login-email" placeholder="Nhập email của bạn" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Mật khẩu</label>
+            <div class="input-wrapper">
+              <span class="icon">🔒</span>
+              <input
+                type="password"
+                id="login-pass"
+                placeholder="Nhập mật khẩu"
+                maxlength="72"
+              />
+            </div>
+          </div>
 
-      <div class="section-block">
-        <div class="section-title">3. Telemetry gần đây</div>
-        <button class="primary-btn" style="padding: 6px 18px; font-size: 13px;" onclick="loadTelemetry()">
-          Tải 20 bản ghi gần nhất
-        </button>
-        <div id="telemetry-container" style="margin-top:10px;"></div>
-      </div>
+          <button class="primary-btn" onclick="login()">ĐĂNG NHẬP</button>
+          <div class="auth-extra-links">
+            <a href="/forgot-password">Quên mật khẩu?</a>
+            <span>•</span>
+            <a href="#" onclick="forgotEmail(event)">Quên tài khoản?</a>
+          </div>
 
-      <div class="section-block">
-        <div class="section-title">4. Tổng lượng nước theo ngày</div>
-        <div class="section-sub">
-          Mặc định xem ngày hôm nay (UTC). Có thể chỉnh target nếu muốn.
-        </div>
-        <div class="form-group">
-          <label>Ngày (YYYY-MM-DD, để trống = hôm nay)</label>
-          <div class="input-wrapper">
-            <span class="icon">📅</span>
-            <input type="text" id="summary-date" placeholder="vd: 2025-11-27" />
+          <div class="toggle-link" onclick="showRegister()">
+            Chưa có tài khoản? <b>Đăng ký</b>
           </div>
         </div>
-        <div class="form-group">
-          <label>Target (ml, để trống = payload / 2000ml)</label>
-          <div class="input-wrapper">
-            <span class="icon">🎯</span>
-            <input type="number" id="summary-target" placeholder="vd: 2000" />
+
+        <!-- REGISTER FORM -->
+        <div id="register-section" class="hidden">
+          <div class="form-group">
+            <label>Email</label>
+            <div class="input-wrapper">
+              <span class="icon">📧</span>
+              <input type="email" id="reg-email" placeholder="Nhập email để đăng ký" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Mật khẩu</label>
+            <div class="input-wrapper">
+              <span class="icon">🔑</span>
+              <input
+                type="password"
+                id="reg-pass"
+                placeholder="Tối thiểu 6 ký tự"
+                maxlength="72"
+              />
+            </div>
+          </div>
+
+          <button class="primary-btn" onclick="register()">ĐĂNG KÝ</button>
+          <div class="toggle-link" onclick="showLogin()">
+            Đã có tài khoản? <b>Đăng nhập</b>
           </div>
         </div>
-        <button class="primary-btn" style="padding: 6px 18px; font-size: 13px;" onclick="loadDailySummary()">
-          Xem tổng trong ngày
-        </button>
-        <div id="summary-container" style="margin-top:10px;"></div>
+
+        <p class="small-text" id="auth-status"></p>
       </div>
     </div>
   </div>
-</div>
 
-<div class="log-card">
-  <div class="log-card-title">Client log</div>
-  <pre id="log"></pre>
-</div>
+  <!-- Log client (ẩn) -->
+  <div class="log-card">
+    <div class="log-card-title">Client log</div>
+    <pre id="log"></pre>
+  </div>
 
-<script>
-  // Gọi cùng domain với backend (local hoặc Render)
-  // "" nghĩa là dùng origin hiện tại (tự động đúng cho cả 127.0.0.1 và onrender.com)
-  const API_BASE = "";
+  <!-- Đồng hồ thời gian thực (góc phải dưới) -->
+  <div class="realtime-clock" id="realtime-clock"></div>
 
-  let accessToken = null;
-  let currentEmail = null;
-  let devicesCache = [];
+  <script>
+    const API_BASE = "";
+    let accessToken = null;
+    let currentEmail = null;
+    let devicesCache = [];
 
-  function log(msg) {
-    const box = document.getElementById("log");
-    if (!box) return;
-    box.textContent += msg + "\n";
-    box.scrollTop = box.scrollHeight;
-  }
-
-  function showRegister() {
-    document.getElementById("login-section").classList.add("hidden");
-    document.getElementById("register-section").classList.remove("hidden");
-  }
-
-  function showLogin() {
-    document.getElementById("register-section").classList.add("hidden");
-    document.getElementById("login-section").classList.remove("hidden");
-  }
-
-  async function register() {
-    const email = document.getElementById("reg-email").value.trim();
-    const pass = document.getElementById("reg-pass").value.trim();
-    if (!email || !pass) {
-      alert("Nhập email và mật khẩu để đăng ký");
-      return;
+    function log(msg) {
+      const box = document.getElementById("log");
+      if (!box) return;
+      box.textContent += msg + "\n";
+      box.scrollTop = box.scrollHeight;
     }
-    try {
-      const res = await fetch(API_BASE + "/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password: pass }),
+
+    function showRegister() {
+      document.getElementById("login-section").classList.add("hidden");
+      document.getElementById("register-section").classList.remove("hidden");
+    }
+
+    function showLogin() {
+      document.getElementById("register-section").classList.add("hidden");
+      document.getElementById("login-section").classList.remove("hidden");
+    }
+
+    async function register() {
+      const email = document.getElementById("reg-email").value.trim();
+      const pass = document.getElementById("reg-pass").value.trim();
+      if (!email || !pass) {
+        alert("Nhập email và mật khẩu để đăng ký");
+        return;
+      }
+      try {
+        const res = await fetch(API_BASE + "/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password: pass }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          alert("Đăng ký thất bại: " + (data.detail || res.status));
+          log("Register failed: " + JSON.stringify(data));
+        } else {
+          alert("Đăng ký thành công, bây giờ hãy đăng nhập.");
+          log("Registered: " + JSON.stringify(data));
+          showLogin();
+          document.getElementById("login-email").value = email;
+        }
+      } catch (e) {
+        alert("Lỗi mạng khi đăng ký");
+        log("Register error: " + e);
+      }
+    }
+
+    async function login() {
+      const email = document.getElementById("login-email").value.trim();
+      const pass = document.getElementById("login-pass").value.trim();
+      if (!email || !pass) {
+        alert("Nhập email và mật khẩu để đăng nhập");
+        return;
+      }
+      try {
+        const body = new URLSearchParams();
+        body.append("username", email);
+        body.append("password", pass);
+
+        const res = await fetch(API_BASE + "/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body,
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          alert("Đăng nhập thất bại: " + (data.detail || res.status));
+          log("Login failed: " + JSON.stringify(data));
+          return;
+        }
+
+        const token = data.access_token;
+        if (!token) {
+          alert("Đăng nhập thất bại: không nhận được token.");
+          log("Login missing token: " + JSON.stringify(data));
+          return;
+        }
+
+        localStorage.setItem("access_token", token);
+        localStorage.setItem("user_email", email);
+
+        log("Login success, redirect to /dashboard");
+        window.location.href = "/dashboard";
+      } catch (e) {
+        alert("Lỗi mạng khi đăng nhập");
+        log("Login error: " + e);
+      }
+    }
+
+    function forgotEmail(event) {
+      event.preventDefault();
+      alert(
+        "Nếu bạn quên email/tài khoản, hãy liên hệ quản trị hệ thống để được hỗ trợ."
+      );
+    }
+
+    // =========================
+    // ĐỒNG HỒ THỜI GIAN THỰC
+    // =========================
+    function updateClock() {
+      const clockEl = document.getElementById("realtime-clock");
+      if (!clockEl) return;
+
+      const now = new Date();
+      const time = now.toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        alert("Đăng ký thất bại: " + (data.detail || res.status));
-        log("Register failed: " + JSON.stringify(data));
+
+      clockEl.textContent = time;
+    }
+
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // =========================
+    // ĐỔI BACKGROUND THEO GIỜ
+    // =========================
+    function setTimeTheme() {
+      const hour = new Date().getHours();
+      let bg = "/static/Morning.png"; // mặc định sáng
+
+      if (hour >= 5 && hour < 11) {
+        bg = "/static/Morning.png";
+      } else if (hour >= 11 && hour < 14) {
+        bg = "/static/Lunch.png";
+      } else if (hour >= 14 && hour < 18) {
+        bg = "/static/Afternoon.png";
       } else {
-        alert("Đăng ký thành công, bây giờ hãy đăng nhập.");
-        log("Registered: " + JSON.stringify(data));
-        showLogin();
-        document.getElementById("login-email").value = email;
-      }
-    } catch (e) {
-      alert("Lỗi mạng khi đăng ký");
-      log("Register error: " + e);
-    }
-  }
-
-  async function login() {
-    const email = document.getElementById("login-email").value.trim();
-    const pass = document.getElementById("login-pass").value.trim();
-    if (!email || !pass) {
-      alert("Nhập email và mật khẩu để đăng nhập");
-      return;
-    }
-    try {
-      const body = new URLSearchParams();
-      body.append("username", email);
-      body.append("password", pass);
-
-      const res = await fetch(API_BASE + "/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body,
-      });
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        alert("Đăng nhập thất bại: " + (data.detail || res.status));
-        log("Login failed: " + JSON.stringify(data));
-        return;
+        bg = "/static/Night.png";
       }
 
-      const token = data.access_token;
-      if (!token) {
-        alert("Đăng nhập thất bại: không nhận được token.");
-        log("Login missing token: " + JSON.stringify(data));
-        return;
-      }
+      document.body.style.backgroundImage = `url('${bg}')`;
+    }
 
-      // Lưu token + email cho các trang khác dùng
-      localStorage.setItem("access_token", token);
-      localStorage.setItem("user_email", email);
-
-      log("Login success, redirect to /dashboard");
-
-      // Sang trang dashboard thật
-      window.location.href = "/dashboard";
-    } catch (e) {
-      alert("Lỗi mạng khi đăng nhập");
-      log("Login error: " + e);
-    }
-  }
-
-  function forgotEmail(event) {
-    event.preventDefault();
-    alert(
-      "Nếu bạn quên email/tài khoản, hãy liên hệ quản trị hệ thống để được hỗ trợ."
-    );
-  }
-
-  function logout() {
-    accessToken = null;
-    currentEmail = null;
-    devicesCache = [];
-    const dash = document.getElementById("dashboard-card");
-    if (dash) dash.classList.add("hidden");
-    const statusEl = document.getElementById("auth-status");
-    if (statusEl) statusEl.textContent = "Đã đăng xuất.";
-    const sel = document.getElementById("device-select");
-    if (sel)
-      sel.innerHTML = '<option value="">-- Chưa chọn --</option>';
-    const telDiv = document.getElementById("telemetry-container");
-    if (telDiv) telDiv.innerHTML = "";
-    const sumDiv = document.getElementById("summary-container");
-    if (sumDiv) sumDiv.innerHTML = "";
-    const apiSpan = document.getElementById("dev-api-key");
-    if (apiSpan) apiSpan.textContent = "";
-    log("Logout.");
-  }
-
-  function authHeader() {
-    if (!accessToken) return {};
-    return { Authorization: "Bearer " + accessToken };
-  }
-
-  async function createDevice() {
-    if (!accessToken) {
-      alert("Hãy đăng nhập trước");
-      return;
-    }
-    const deviceId = document.getElementById("dev-id").value.trim();
-    const name = document.getElementById("dev-name").value.trim();
-    if (!deviceId) {
-      alert("Nhập device_id");
-      return;
-    }
-    try {
-      const res = await fetch(API_BASE + "/devices", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...authHeader(),
-        },
-        body: JSON.stringify({ device_id: deviceId, name }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        alert("Tạo device thất bại: " + (data.detail || res.status));
-        log("Create device failed: " + JSON.stringify(data));
-        return;
-      }
-      alert("Tạo device thành công. API key được hiển thị phía dưới.");
-      log("Device created: " + JSON.stringify(data));
-      await loadDevices();
-      const sel = document.getElementById("device-select");
-      if (sel) {
-        sel.value = data.device_id;
-        onDeviceChange();
-      }
-    } catch (e) {
-      alert("Lỗi mạng khi tạo device");
-      log("Create device error: " + e);
-    }
-  }
-
-  async function loadDevices() {
-    if (!accessToken) {
-      alert("Hãy đăng nhập trước");
-      return;
-    }
-    try {
-      const res = await fetch(API_BASE + "/devices", {
-        headers: { ...authHeader() },
-      });
-      const data = await res.json().catch(() => []);
-      if (!res.ok) {
-        alert("Lấy danh sách device thất bại");
-        log("List devices failed: " + JSON.stringify(data));
-        return;
-      }
-      devicesCache = data;
-      const sel = document.getElementById("device-select");
-      if (!sel) return;
-      sel.innerHTML = '<option value="">-- Chọn device --</option>';
-      for (const d of data) {
-        const opt = document.createElement("option");
-        opt.value = d.device_id;
-        opt.textContent = d.device_id + (d.name ? " (" + d.name + ")" : "");
-        sel.appendChild(opt);
-      }
-      if (data.length > 0) {
-        sel.value = data[0].device_id;
-        onDeviceChange();
-      }
-      log("Loaded devices: " + JSON.stringify(data));
-    } catch (e) {
-      alert("Lỗi mạng khi tải devices");
-      log("Load devices error: " + e);
-    }
-  }
-
-  function onDeviceChange() {
-    const sel = document.getElementById("device-select");
-    const id = sel ? sel.value : "";
-    const span = document.getElementById("dev-api-key");
-    const dev = devicesCache.find((d) => d.device_id === id);
-    if (dev) {
-      span.textContent = dev.api_key;
-    } else {
-      span.textContent = "";
-    }
-  }
-
-  async function loadTelemetry() {
-    if (!accessToken) {
-      alert("Hãy đăng nhập trước");
-      return;
-    }
-    const sel = document.getElementById("device-select");
-    const id = sel ? sel.value : "";
-    if (!id) {
-      alert("Chọn device trước");
-      return;
-    }
-    try {
-      const res = await fetch(
-        API_BASE + `/devices/${encodeURIComponent(id)}/telemetry?limit=20`,
-        { headers: { ...authHeader() } }
-      );
-      const data = await res.json().catch(() => []);
-      if (!res.ok) {
-        alert("Lấy telemetry thất bại");
-        log("Get telemetry failed: " + JSON.stringify(data));
-        return;
-      }
-      const div = document.getElementById("telemetry-container");
-      if (!div) return;
-      if (!data.length) {
-        div.innerHTML = "<p>Chưa có dữ liệu.</p>";
-        return;
-      }
-      let html =
-        "<table><thead><tr><th>Thời gian</th><th>Value (ml)</th><th>Payload</th></tr></thead><tbody>";
-      for (const row of data) {
-        html += `<tr>
-          <td>${row.ts}</td>
-          <td>${row.value ?? ""}</td>
-          <td><code>${JSON.stringify(row.payload || {})}</code></td>
-        </tr>`;
-      }
-      html += "</tbody></table>";
-      div.innerHTML = html;
-      log("Telemetry loaded, count=" + data.length);
-    } catch (e) {
-      alert("Lỗi mạng khi tải telemetry");
-      log("Telemetry error: " + e);
-    }
-  }
-
-  async function loadDailySummary() {
-    if (!accessToken) {
-      alert("Hãy đăng nhập trước");
-      return;
-    }
-    const sel = document.getElementById("device-select");
-    const id = sel ? sel.value : "";
-    if (!id) {
-      alert("Chọn device trước");
-      return;
-    }
-    const day = document.getElementById("summary-date").value.trim();
-    const target = document.getElementById("summary-target").value.trim();
-    const params = new URLSearchParams();
-    params.append("device_id", id);
-    if (day) params.append("date_str", day);
-    if (target) params.append("target_ml", target);
-
-    try {
-      const res = await fetch(
-        API_BASE + `/water-intake/daily?` + params.toString(),
-        { headers: { ...authHeader() } }
-      );
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        alert("Lấy tổng trong ngày thất bại: " + (data.detail || res.status));
-        log("Daily summary failed: " + JSON.stringify(data));
-        return;
-      }
-      const div = document.getElementById("summary-container");
-      if (!div) return;
-      const cls =
-        data.status === "done"
-          ? "status-done"
-          : data.status === "almost"
-          ? "status-almost"
-          : "status-low";
-      div.innerHTML = `
-        <p><b>Ngày:</b> ${data.date}</p>
-        <p><b>Tổng đã uống:</b> ${data.total_intake_ml} ml</p>
-        <p><b>Target:</b> ${data.target_ml} ml</p>
-        <p><b>Còn thiếu:</b> ${data.remaining_ml} ml</p>
-        <p><b>Hoàn thành:</b> ${(data.percentage * 100).toFixed(1)}%</p>
-        <p><b>Trạng thái:</b> <span class="${cls}">${data.status}</span></p>
-      `;
-      log("Daily summary: " + JSON.stringify(data));
-    } catch (e) {
-      alert("Lỗi mạng khi tải tổng trong ngày");
-      log("Daily summary error: " + e);
-    }
-  }
-</script>
+    setTimeTheme();
+    setInterval(setTimeTheme, 10 * 60 * 1000);
+  </script>
 </body>
 </html>

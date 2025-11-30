@@ -1,504 +1,767 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-  <meta charset="UTF-8" />
-  <title>DoctorX - Trang chủ</title>
+  <head>
+    <!-- Thiết lập bảng mã tiếng Việt -->
+    <meta charset="UTF-8" />
+    <!-- Tiêu đề tab trình duyệt -->
+    <title>DoctorX - Garden</title>
 
-  <!-- Chart.js để vẽ biểu đồ tròn -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Thư viện Chart.js (hiện tại chưa dùng, để sau nếu cần vẽ biểu đồ) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+    <style>
+      /* Reset mặc định */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI",
-        sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      background-image: url("/static/Theme.png");
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-      color: #0b1f3b;
-    }
+      /* Toàn bộ body trang */
+      body {
+        font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
 
-    /* Thanh trên cùng: ô Đăng xuất (đen) */
-    .top-bar {
-      width: 100%;
-      padding: 24px 40px 0;
-      display: flex;
-      justify-content: flex-end;
-    }
+        /* Gradient nền mặc định (trước khi JS set hình theo giờ) */
+        background: radial-gradient(
+          circle at top left,
+          #1e293b 0,
+          #020617 45%,
+          #000 100%
+        );
 
-    .btn-logout {
-      background: #000;
-      color: #fff;
-      border: none;
-      padding: 10px 24px;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
-      transition: transform 0.12s ease, box-shadow 0.12s ease,
-        background 0.12s ease;
-    }
+        color: #e5e7eb;
+        min-height: 100vh;
 
-    .btn-logout:hover {
-      background: #212121;
-      transform: translateY(-1px);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.45);
-    }
+        /* Thu nhỏ giao diện (nếu muốn to hơn nâng lên 0.9) */
+        zoom: 0.8;
 
-    /* Ô đỏ Welcome */
-  .welcome-banner {
-  margin-top: 40px;
-  width: 80%;
-  max-width: 1100px;
+        /* Sẽ bị thay bằng ảnh trong JS theo buổi trong ngày */
+        background-color: #020617;
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        background-repeat: no-repeat;
+      }
 
-  /* nền đen trong suốt */
-  background: rgba(0, 0, 0, 0.55);
+      /* Khung chứa sidebar + main bên phải */
+      .app-shell {
+        display: flex;
+        min-height: 100vh;
+      }
 
-  border-radius: 18px;
-  padding: 26px 40px;
-  color: #fff;
+      /* ========================= SIDEBAR ========================= */
 
-  /* căn giữa nội dung trong ô */
+      .sidebar {
+        width: 350px;
+        background: rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        padding: 22px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        border-right: 1px solid rgba(15, 23, 42, 0.7);
+        box-shadow: 4px 0 25px rgba(0, 0, 0, 0.5);
+      }
+
+      .sidebar-brand {
+        display: flex;
+        align-items: center;
+        gap: 17px;
+        padding: 30px 32px;
+        border-radius: 16px;
+        background: radial-gradient(circle at top left, #22c55e55, #0f172a 60%);
+      }
+
+.sidebar-brand-icon {
+        /* khung logo vuông, không bị co */
+        width: 80px;
+        height: 80px;
+        flex: 0 0 80px;          /* khóa chiều rộng trong flex */
+        aspect-ratio: 1 / 1;
+
+        border-radius: 100%;      /* bo tròn khung */
+        background: #0f172a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;        /* cắt phần ảnh thừa */
+        padding: 0;
+      }
+
+      .sidebar-brand-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;       /* căng đầy khung, không méo */
+        border-radius: 100%;      /* bản thân ảnh cũng tròn */
+        display: block;
+      }
+
+      .sidebar-brand-text-main {
+        font-size: 25px;
+        font-weight: 700;
+      }
+
+      .sidebar-brand-text-sub {
+        font-size: 15px;
+        color: #9ca3af;
+      }
+
+      .sidebar-nav {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        margin-top: 4px;
+        gap: 50px;
+        justify-content: flex-start;
+      }
+
+      .nav-label-heading {
+        font-size: 30px;
+        letter-spacing: 10px;
+        text-transform: uppercase;
+        color: #6b7280;
+        padding: 0 4px 4px;
+      }
+
+      .nav-item {
+        width: 100%;
+        border: none;
+        border-radius: 14px;
+        padding: 12px 16px;
+        min-height: 54px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #cbd5f5;
+        background: transparent;
+        cursor: pointer;
+        transition: background 0.15s ease, transform 0.1s ease;
+      }
+
+      .nav-item:hover {
+        background: rgba(148, 163, 184, 0.12);
+        transform: translateY(-1px);
+      }
+
+      .nav-item.active {
+        background: linear-gradient(90deg, #22d3ee, #22c55e);
+        color: #0f172a;
+        box-shadow: 0 10px 24px rgba(34, 211, 238, 0.45);
+      }
+
+      .nav-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        flex-shrink: 0;
+      }
+
+      .nav-item.active .nav-icon {
+        background: rgba(15, 23, 42, 0.1);
+      }
+
+      .nav-text-main {
+        font-size: 25px;
+      }
+
+      .nav-text-sub {
+        font-size: 20px;
+        color: #9ca3af;
+      }
+
+      .nav-item.active .nav-text-sub {
+        color: #0f172a;
+      }
+
+      /* ========================= MAIN ========================= */
+
+      .main-area {
+        flex: 1;
+        padding: 22px 26px 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .main-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        padding: 14px 18px;
+        border-radius: 18px;
+        background: rgba(15, 23, 42, 0.75);
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.7);
+      }
+
+      .main-title {
+        font-size: 40px;
+        font-weight: 700;
+      }
+
+      .main-subtitle {
+        font-size: 20px;
+        color: #9ca3af;
+        margin-top: 4px;
+      }
+
+      .user-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(15, 23, 42, 0.7);
+        padding: 6px 10px;
+        border-radius: 999px;
+      }
+
+      .user-name-pill {
+        padding: 10px 15px;
+        border-radius: 999px;
+        background: rgba(55, 65, 81, 0.8);
+        font-size: 15px;
+      }
+
+      .btn-logout {
+        border: none;
+        border-radius: 999px;
+        padding: 15px 40px;
+        font-size: 20px;
+        font-weight: 600;
+        cursor: pointer;
+        background: #ef4444;
+        color: #fee2e2;
+        box-shadow: 0 6px 14px rgba(248, 113, 113, 0.4);
+        transition: transform 0.1s ease, box-shadow 0.1s ease,
+          background 0.1s ease;
+      }
+
+      .btn-logout:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 22px rgba(248, 113, 113, 0.6);
+        background: #dc2626;
+      }
+
+      /* ================== CARD MÔ PHỎNG GARDEN ================== */
+
+      .garden-sim {
+        margin-top: -20px;
+        width: 100%;
+        flex: 1;
+        display: flex;
+      }
+
+.garden-sim-card {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-height: calc(100vh - 170px);
+  margin: 0;
+  border-radius: 24px;
+  padding: 28px 32px;
   display: flex;
-  flex-direction: column;
-  align-items: center;    /* căn ngang (trái/phải) */
-  justify-content: center;/* căn dọc (trên/dưới) */
-  text-align: center;
+  align-items: flex-start;
+  justify-content: flex-start;
 
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+  /* nền cây */
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.7);
+  overflow: hidden;
+
+  /* giúp ảnh nét hơn khi scale (không bắt buộc nhưng nên có) */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
-    .welcome-line-1 {
-      margin: 0;
-      font-size: 28px;
-      letter-spacing: 1px;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
+/* overlay chỉ làm tối nhẹ bên trái, không phủ kín cây */
+.garden-sim-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* overlay nhẹ, chỉ nằm quanh khu panel bên trái */
+  background: radial-gradient(
+    circle at 140px 50%,
+    rgba(15, 23, 42, 0.65) 0%,
+    rgba(15, 23, 42, 0.35) 22%,
+    rgba(15, 23, 42, 0.0) 50%
+  );
+  pointer-events: none;
+}
 
-    .welcome-line-2 {
-      margin: 6px 0 0 0;
-      font-size: 36px;
-      font-weight: 800;
-    }
 
-    /* Hàng 3 ô trắng – to hơn, cách xa nhau hơn */
-    .metrics-row {
-      margin-top: 70px;
-      margin-bottom: 80px;
-      width: 80%;
-      max-width: 1100px;
-      display: flex;
-      justify-content: space-between;
-      gap: 40px; /* tăng khoảng cách giữa các ô */
-      flex-wrap: wrap;
-    }
 
-    .metric-card {
-      flex: 1 1 0;
-      min-width: 260px;
-      min-height: 260px;
-      background: #ffffffee;
-      border-radius: 20px;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px 24px;
-      text-align: center;
-    }
-
-    .metric-label {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 16px;
-      color: #37474f;
-    }
-
-    .metric-main {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
-    .metric-value {
-      font-size: 28px;
-      font-weight: 800;
-      color: #1565c0;
-    }
-
-    .metric-caption {
-      font-size: 13px;
-      color: #607d8b;
-      margin-top: 8px;
-      text-align: center;
-    }
-
-    /* chart tròn + text giữa */
-    .metric-chart-wrapper {
-      position: relative;
-      width: 130px;
-      height: 130px;
-    }
-
-    .metric-chart {
-      width: 130px;
-      height: 130px;
-    }
-
-    .metric-center-text {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 16px;
-      font-weight: 700;
-      color: #1565c0;
-      white-space: nowrap;
-    }
-
-    .metric-center-text-purple {
-      color: #ab47bc;
-    }
-
-    /* Ô thứ 3: canh giữa nội dung theo chiều dọc */
-    .metric-card-days {
-      justify-content: center;
-    }
-
-    @media (max-width: 900px) {
-      .welcome-banner {
-        width: 90%;
+      .garden-sim-left {
+        position: relative;
+        z-index: 1;
+        max-width: 520px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
       }
-      .metrics-row {
-        width: 90%;
-        gap: 24px;
+
+      .garden-sim-title {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
       }
-      .metric-card {
-        min-width: 220px;
-        min-height: 220px;
+
+      .garden-sim-sub {
+        margin: 0 0 8px;
+        font-size: 13px;
+        color: #e5e7eb;
       }
-    }
-  </style>
-</head>
-<body>
-  <!-- Ô đen Đăng xuất -->
-  <div class="top-bar">
-    <button class="btn-logout" id="btn-logout">Đăng xuất</button>
-  </div>
 
-  <!-- Ô đỏ Welcome -->
-  <section class="welcome-banner">
-    <p class="welcome-line-1">Welcome to the Arena of Discipline</p>
-    <p class="welcome-line-2" id="welcome-name">DoctorX</p>
-  </section>
+      /* ==== 3 KHUNG TRẮNG MÔ PHỎNG ==== */
 
-  <!-- 3 ô trắng -->
-  <section class="metrics-row">
-  <!-- 1. Tổng ml nước còn lại -->
-  <div class="metric-card" id="card-water-remaining">
-  <div class="metric-label">Nước còn lại trong ngày</div>
+      .sim-summary-boxes {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 10px;
+      }
 
-      <div class="metric-main">
-        <div class="metric-chart-wrapper">
-          <canvas id="chart-water" class="metric-chart"></canvas>
-          <!-- số ml hiển thị ngay giữa biểu đồ -->
-          <div
-            class="metric-center-text"
-            id="water-center-text"
-          >
-            -- ml
+      .sim-summary-box {
+        background: rgba(255, 255, 255, 0.12); /* trắng trong suốt */
+        border: 1px solid rgba(148, 163, 184, 0.8); /* viền xám */
+        border-radius: 18px;
+        padding: 10px 14px;
+        backdrop-filter: blur(6px);
+      }
+
+      .sim-summary-title {
+        font-size: 13px;
+        color: #d1d5db;
+        margin-bottom: 4px;
+      }
+
+      .sim-summary-value {
+        font-size: 20px;
+        font-weight: 600;
+      }
+
+      /* Badge cũ vẫn giữ nếu sau này bạn dùng lại */
+      .stat-badge {
+        display: inline-block;
+        margin-top: 4px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+        background: rgba(96, 165, 250, 0.15);
+        border: 1px solid rgba(96, 165, 250, 0.5);
+        color: #bfdbfe;
+      }
+
+      /* Nhóm nút +100ml và Reset */
+      .garden-sim-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      /* Nút +100ml: xanh pastel trong suốt + viền xanh đậm */
+      .btn-sim-primary {
+        border-radius: 999px;
+        padding: 8px 20px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid #1d4ed8; /* xanh đậm */
+        background: rgba(59, 130, 246, 0.18); /* xanh pastel trong suốt */
+        color: #eff6ff;
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+      }
+
+      /* Nút Reset: xám trong suốt + viền xám đậm */
+      .btn-sim-ghost {
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.85);
+        padding: 8px 18px;
+        font-size: 13px;
+        font-weight: 500;
+        background: rgba(15, 23, 42, 0.3);
+        color: #e5e7eb;
+        cursor: pointer;
+      }
+
+      .garden-threshold-list {
+        margin: 12px 0 0;
+        padding-left: 20px;
+        font-size: 12px;
+        color: #e5e7eb;
+      }
+
+      .garden-threshold-list li + li {
+        margin-top: 4px;
+      }
+
+      @media (max-width: 900px) {
+        .garden-sim-card {
+          flex-direction: column;
+          min-height: 0;
+        }
+      }
+
+      /* ================== ĐỒNG HỒ GÓC PHẢI DƯỚI ================== */
+
+      .realtime-clock {
+        position: fixed;
+        bottom: 10px;
+        right: 20px;
+        z-index: 50;
+        padding: 20px 40px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.85);
+        color: #e5e7eb;
+        font-size: 25px;
+        font-weight: 500;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(10px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <!-- ========================= SIDEBAR ========================= -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon">
+            <img src="/static/doctorx_logo.png" alt="DoctorX Logo" />
+          </div>
+          <div>
+            <div class="sidebar-brand-text-main">IoT Drinking Tracker</div>
+            <div class="sidebar-brand-text-sub">Drink · Grow · Repeat</div>
           </div>
         </div>
-      </div>
 
-      <div class="metric-caption" id="metric-water-summary">
-        Chưa có dữ liệu hôm nay.
-      </div>
-    </div>
+        <div class="sidebar-nav">
+          <div class="nav-label-heading">MENU</div>
 
-    <!-- 2. Số lần uống / mục tiêu -->
-    <div class="metric-card">
-      <div class="metric-label">Số lần uống / mục tiêu</div>
+          <button class="nav-item active" data-section="garden">
+            <div class="nav-icon">🏡</div>
+            <div>
+              <div class="nav-text-main">Garden</div>
+              <div class="nav-text-sub">Tổng quan cây & nước</div>
+            </div>
+          </button>
 
-      <div class="metric-main">
-        <div class="metric-chart-wrapper">
-          <canvas id="chart-times" class="metric-chart"></canvas>
-          <!-- số lần / mục tiêu nằm giữa biểu đồ -->
-          <div
-            class="metric-center-text metric-center-text-purple"
-            id="times-center-text"
-          >
-            -- / --
-          </div>
+          <button class="nav-item" data-section="achievements">
+            <div class="nav-icon">🏆</div>
+            <div>
+              <div class="nav-text-main">Achievements</div>
+              <div class="nav-text-sub">Thành tích uống nước</div>
+            </div>
+          </button>
+
+          <button class="nav-item" data-section="shop">
+            <div class="nav-icon">🛒</div>
+            <div>
+              <div class="nav-text-main">Shop</div>
+              <div class="nav-text-sub">Chậu cây & skin</div>
+            </div>
+          </button>
+
+          <button class="nav-item" data-section="activities">
+            <div class="nav-icon">📋</div>
+            <div>
+              <div class="nav-text-main">Activities</div>
+              <div class="nav-text-sub">Nhật ký uống nước</div>
+            </div>
+          </button>
+
+          <button class="nav-item" data-section="personal">
+            <div class="nav-icon">👤</div>
+            <div>
+              <div class="nav-text-main">Personal</div>
+              <div class="nav-text-sub">Thông tin & cài đặt</div>
+            </div>
+          </button>
         </div>
-      </div>
+      </aside>
 
-      <div class="metric-caption">
-        Tính trong ngày hôm nay.
-      </div>
+      <!-- ========================= MAIN ========================= -->
+      <main class="main-area">
+        <header class="main-header">
+          <div>
+            <div class="main-title">Garden</div>
+            <div class="main-subtitle">
+              Theo dõi lượng nước uống hằng ngày và sức khỏe của cây.
+            </div>
+          </div>
+
+          <div class="user-box">
+            <span class="user-name-pill" id="user-pill">user</span>
+            <button id="btn-logout" class="btn-logout">Đăng xuất</button>
+          </div>
+        </header>
+
+        <!-- ================== CARD MÔ PHỎNG GARDEN ================== -->
+        <section class="garden-sim">
+          <div class="garden-sim-card" id="sim-bg">
+            <div class="garden-sim-left">
+
+              <!-- 3 khung trắng -->
+              <div class="sim-summary-boxes">
+                <!-- Khung 1 -->
+                <div class="sim-summary-box">
+                  <div class="sim-summary-title">Đã mô phỏng</div>
+                  <div class="sim-summary-value">
+                    <span id="sim-water-ml">0</span> ml
+                  </div>
+                </div>
+
+                <!-- Khung 2 -->
+                <div class="sim-summary-box">
+                  <div class="sim-summary-title">Trạng thái cây</div>
+                  <div class="sim-summary-value" id="sim-status-text">
+                    Khô héo
+                  </div>
+                </div>
+
+                <!-- Khung 3 -->
+                <div class="sim-summary-box">
+                  <div class="sim-summary-title">Số ngày đã thực hiện</div>
+                  <div class="sim-summary-value">
+                    <span id="sim-days">0</span> ngày
+                  </div>
+                </div>
+              </div>
+
+              <!-- Nút -->
+              <div class="garden-sim-actions">
+                <button id="btn-add-100" class="btn-sim-primary">
+                  +100 ml
+                </button>
+                <button id="btn-reset-sim" class="btn-sim-ghost">Reset</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
 
-    <!-- 3. Số ngày đã thực hiện -->
-    <div class="metric-card metric-card-days">
-      <div class="metric-label">Số ngày đã thực hiện</div>
+    <!-- Đồng hồ thời gian thực -->
+    <div class="realtime-clock" id="realtime-clock"></div>
 
-      <div class="metric-main">
-        <div class="metric-value" id="metric-days">--</div>
-      </div>
+    <script>
+      /* ===== AUTH ===== */
+      const token = localStorage.getItem("access_token");
+      const userEmail = localStorage.getItem("user_email");
 
-      <div class="metric-caption">
-        Số ngày có ít nhất một lần uống nước được ghi lại.
-      </div>
-    </div>
-  </section>
+      if (!token) {
+        window.location.href = "/app";
+      }
 
-  <script>
-    // ==== CẤU HÌNH CƠ BẢN ====
-    const DAILY_TARGET_ML = 2000;    // mục tiêu ml/ngày
-    const DAILY_TARGET_TIMES = 8;    // mục tiêu số lần uống/ngày
+      const userPillEl = document.getElementById("user-pill");
+      if (userEmail && userPillEl) {
+        const namePart = userEmail.split("@")[0];
+        userPillEl.textContent = namePart || userEmail;
+      }
 
-    // ==== TOKEN & TÊN USER ====
-const token = localStorage.getItem("access_token");
-const userEmail = localStorage.getItem("user_email");
-
-if (!token) {
-  window.location.href = "/app";
-}
-
-const welcomeNameEl = document.getElementById("welcome-name");
-if (userEmail) {
-  const namePart = userEmail.split("@")[0];
-  welcomeNameEl.textContent = namePart || userEmail;
-}
-
-// Click vào ô "Nước còn lại trong ngày" -> sang trang chi tiết
-const cardWater = document.getElementById("card-water-remaining");
-if (cardWater) {
-  cardWater.style.cursor = "pointer";
-  cardWater.addEventListener("click", () => {
-    window.location.href = "/water-detail";
-  });
-}
-
-document.getElementById("btn-logout").addEventListener("click", () => {
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("user_email");
-  window.location.href = "/app";
-});
-
-    // ==== CHART ==== 
-    let chartWater = null;
-    let chartTimes = null;
-
-    function createOrUpdateDoughnut(chartRef, ctx, value, max, colorMain) {
-      const safeMax = max <= 0 ? 1 : max;
-      const v = Math.min(Math.max(value, 0), safeMax);
-      const remain = safeMax - v;
-
-      const data = {
-        labels: ["Đã đạt", "Còn lại"],
-        datasets: [
-          {
-            data: [v, remain],
-            backgroundColor: [colorMain, "#e0e0e0"],
-            borderWidth: 0,
-          },
-        ],
-      };
-
-      const options = {
-        cutout: "70%",
-        plugins: {
-          legend: { display: false },
-          tooltip: { enabled: true },
-        },
-      };
-
-      if (chartRef && chartRef instanceof Chart) {
-        chartRef.data = data;
-        chartRef.options = options;
-        chartRef.update();
-        return chartRef;
-      } else {
-        return new Chart(ctx, {
-          type: "doughnut",
-          data,
-          options,
+      const logoutBtn = document.getElementById("btn-logout");
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", () => {
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("user_email");
+          window.location.href = "/app";
         });
       }
-    }
 
-    // ==== LOAD METRICS TỪ BACKEND ====
-    async function loadMetrics() {
-      const waterCenterTextEl = document.getElementById("water-center-text");
-      const waterSummaryEl   = document.getElementById("metric-water-summary");
-      const timesCenterTextEl = document.getElementById("times-center-text");
-      const daysEl = document.getElementById("metric-days");
-
-      try {
-        // 1. Lấy danh sách thiết bị
-        const devResp = await fetch("/devices", {
-          headers: { Authorization: "Bearer " + token },
+      /* ===== NAV (tạm thời chỉ log) ===== */
+      document.querySelectorAll(".nav-item").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const section = btn.dataset.section;
+          console.log("Nav clicked:", section);
         });
+      });
 
-        if (!devResp.ok) {
-          waterSummaryEl.textContent =
-            "Không lấy được thiết bị (" + devResp.status + ")";
-          return;
+      /* ===== MÔ PHỎNG GARDEN +100 ML ===== */
+
+      const simWaterEl = document.getElementById("sim-water-ml");
+      const simStatusEl = document.getElementById("sim-status-text");
+      const simDaysEl = document.getElementById("sim-days");
+      const simBg = document.getElementById("sim-bg");
+      const btnAdd100 = document.getElementById("btn-add-100");
+      const btnResetSim = document.getElementById("btn-reset-sim");
+
+      const DAILY_TARGET_ML = 2000;
+      let simWaterMl = 0;
+      let simDays = 0;
+
+      // ----- chọn background theo giờ cho từng trạng thái -----
+
+      function getDryBgByTime() {
+        const hour = new Date().getHours();
+        if (hour >= 5 && hour < 11) {
+          return "/static/plant_dry_morning.png";
+        } else if (hour >= 11 && hour < 14) {
+          return "/static/plant_dry_lunch.png";
+        } else if (hour >= 14 && hour < 18) {
+          return "/static/plant_dry_afternoon.png";
+        } else {
+          return "/static/plant_dry_night.png";
         }
-
-        const devices = await devResp.json();
-        if (!devices || devices.length === 0) {
-          waterSummaryEl.textContent = "Chưa có thiết bị nào.";
-          waterCenterTextEl.textContent = DAILY_TARGET_ML + " ml";
-          timesCenterTextEl.textContent = `0 / ${DAILY_TARGET_TIMES}`;
-          daysEl.textContent = "0";
-
-          const ctxW = document.getElementById("chart-water").getContext("2d");
-          chartWater = createOrUpdateDoughnut(
-            chartWater,
-            ctxW,
-            0,
-            DAILY_TARGET_ML,
-            "#42a5f5"
-          );
-          const ctxT = document.getElementById("chart-times").getContext("2d");
-          chartTimes = createOrUpdateDoughnut(
-            chartTimes,
-            ctxT,
-            0,
-            DAILY_TARGET_TIMES,
-            "#ab47bc"
-          );
-          return;
-        }
-
-        const firstDeviceId = devices[0].device_id;
-
-        // 2. Lấy telemetry
-        const telResp = await fetch(
-          `/devices/${encodeURIComponent(firstDeviceId)}/telemetry`,
-          {
-            headers: { Authorization: "Bearer " + token },
-          }
-        );
-
-        if (!telResp.ok) {
-          waterSummaryEl.textContent =
-            "Không tải được dữ liệu (" + telResp.status + ")";
-          return;
-        }
-
-        const list = await telResp.json();
-        if (!Array.isArray(list) || list.length === 0) {
-          waterSummaryEl.textContent = "Chưa có dữ liệu telemetry.";
-          waterCenterTextEl.textContent = DAILY_TARGET_ML + " ml";
-          timesCenterTextEl.textContent = `0 / ${DAILY_TARGET_TIMES}`;
-          daysEl.textContent = "0";
-
-          const ctxW = document.getElementById("chart-water").getContext("2d");
-          chartWater = createOrUpdateDoughnut(
-            chartWater,
-            ctxW,
-            0,
-            DAILY_TARGET_ML,
-            "#42a5f5"
-          );
-          const ctxT = document.getElementById("chart-times").getContext("2d");
-          chartTimes = createOrUpdateDoughnut(
-            chartTimes,
-            ctxT,
-            0,
-            DAILY_TARGET_TIMES,
-            "#ab47bc"
-          );
-          return;
-        }
-
-        const today = new Date();
-        const todayStr = today.toISOString().slice(0, 10);
-
-        let totalMlToday = 0;
-        let drinkTimesToday = 0;
-        const daySet = new Set();
-
-        list.forEach((t) => {
-          if (!t.ts) return;
-
-          const dateStr = t.ts.slice(0, 10);
-          daySet.add(dateStr);
-
-          const isWaterMetric =
-            t.metric_type === "water_intake_ml" ||
-            t.metric_type === "water_intake";
-
-          if (isWaterMetric && dateStr === todayStr) {
-            let ml = 0;
-            if (typeof t.value === "number") {
-              ml = t.value;
-            } else if (t.payload && t.payload.volume_ml) {
-              ml = Number(t.payload.volume_ml) || 0;
-            }
-            totalMlToday += ml;
-            drinkTimesToday += 1;
-          }
-        });
-
-        // Nước còn lại
-        const leftMl = Math.max(DAILY_TARGET_ML - totalMlToday, 0);
-        waterCenterTextEl.textContent =
-          leftMl.toLocaleString("vi-VN") + " ml";
-
-        waterSummaryEl.textContent =
-          totalMlToday.toLocaleString("vi-VN") +
-          " / " +
-          DAILY_TARGET_ML.toLocaleString("vi-VN") +
-          " ml đã uống hôm nay.";
-
-        // Số lần uống / mục tiêu
-        timesCenterTextEl.textContent =
-          `${drinkTimesToday} / ${DAILY_TARGET_TIMES}`;
-
-        // Số ngày đã thực hiện
-        daysEl.textContent = daySet.size;
-
-        // Cập nhật biểu đồ
-        const ctxW = document.getElementById("chart-water").getContext("2d");
-        chartWater = createOrUpdateDoughnut(
-          chartWater,
-          ctxW,
-          totalMlToday,
-          DAILY_TARGET_ML,
-          "#42a5f5"
-        );
-
-        const ctxT = document.getElementById("chart-times").getContext("2d");
-        chartTimes = createOrUpdateDoughnut(
-          chartTimes,
-          ctxT,
-          drinkTimesToday,
-          DAILY_TARGET_TIMES,
-          "#ab47bc"
-        );
-      } catch (err) {
-        console.error(err);
-        waterSummaryEl.textContent = "Lỗi khi tải dữ liệu: " + err;
       }
-    }
 
-    loadMetrics();
-  </script>
-</body>
+      function getGrowingBgByTime() {
+        const hour = new Date().getHours();
+        if (hour >= 5 && hour < 11) {
+          return "/static/plant_growing_morning.png";
+        } else if (hour >= 11 && hour < 14) {
+          return "/static/plant_growing_lunch.png";
+        } else if (hour >= 14 && hour < 18) {
+          return "/static/plant_growing_afternoon.png";
+        } else {
+          return "/static/plant_growing_night.png";
+        }
+      }
+
+      function getHealthyBgByTime() {
+        const hour = new Date().getHours();
+        if (hour >= 5 && hour < 11) {
+          return "/static/plant_healthy_morning.png";
+        } else if (hour >= 11 && hour < 14) {
+          return "/static/plant_healthy_lunch.png";
+        } else if (hour >= 14 && hour < 18) {
+          return "/static/plant_healthy_afternoon.png";
+        } else {
+          return "/static/plant_healthy_night.png";
+        }
+      }
+
+      function getBloomBgByTime() {
+        const hour = new Date().getHours();
+        if (hour >= 5 && hour < 11) {
+          return "/static/plant_bloom_morning.png";
+        } else if (hour >= 11 && hour < 14) {
+          return "/static/plant_bloom_lunch.png";
+        } else if (hour >= 14 && hour < 18) {
+          return "/static/plant_bloom_afternoon.png";
+        } else {
+          return "/static/plant_bloom_night.png";
+        }
+      }
+
+      // Quy đổi ml -> trạng thái + background
+      function getStageFromMl(ml) {
+        if (ml < 500) {
+          return {
+            label: "Khô héo",
+            bg: getDryBgByTime(),
+            x: "0px",
+            y: "-30px",
+          };
+        } else if (ml < 1200) {
+          return {
+            label: "Phát triển",
+            bg: getGrowingBgByTime(),
+            x: "0px",
+            y: "-30px",
+          };
+        } else if (ml < DAILY_TARGET_ML) {
+          return {
+            label: "Sống tốt",
+            bg: getHealthyBgByTime(),
+            x: "0px",
+            y: "-30px",
+          };
+        } else {
+          return {
+            label: "Nở hoa",
+            bg: getBloomBgByTime(),
+            x: "0px",
+            y: "-30px",
+          };
+        }
+      }
+
+      function updatePlantUI() {
+        if (simWaterEl) simWaterEl.textContent = simWaterMl;
+        if (simDaysEl) simDaysEl.textContent = simDays;
+
+        const stage = getStageFromMl(simWaterMl);
+        if (simStatusEl) simStatusEl.textContent = stage.label;
+        if (simBg) {
+          simBg.style.backgroundImage = `url('${stage.bg}')`;
+          simBg.style.backgroundPosition = `${stage.x} ${stage.y}`;
+        }
+      }
+
+      if (btnAdd100) {
+        btnAdd100.addEventListener("click", () => {
+          simWaterMl += 100;
+          updatePlantUI();
+        });
+      }
+
+      // Reset:
+      // - nếu đang có ml > 0: reset ml về 0 và tăng số ngày
+      // - nếu ml đã 0 mà bấm tiếp: reset luôn cả số ngày về 0
+      if (btnResetSim) {
+        btnResetSim.addEventListener("click", () => {
+          if (simWaterMl > 0) {
+            simWaterMl = 0;
+            simDays += 1;
+          } else {
+            simWaterMl = 0;
+            simDays = 0;
+          }
+          updatePlantUI();
+        });
+      }
+
+      updatePlantUI();
+
+      /* ===== ĐỒNG HỒ HH:MM GÓC PHẢI ===== */
+
+      function updateClock() {
+        const clockEl = document.getElementById("realtime-clock");
+        if (!clockEl) return;
+        const now = new Date();
+        const time = now.toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        });
+        clockEl.textContent = time;
+      }
+
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      /* ===== ĐỔI THEME NỀN THEO GIỜ (background ngoài) ===== */
+
+      function getDashboardThemeByHour(hour) {
+        if (hour >= 6 && hour < 11) {
+          return "/static/Morning_v1.png";
+        } else if (hour >= 11 && hour < 14) {
+          return "/static/Lunch_V1.png";
+        } else if (hour >= 14 && hour < 18) {
+          return "/static/Afternoon_V1.png";
+        } else {
+          return "/static/Night_V1.png";
+        }
+      }
+
+      function applyDashboardTheme() {
+        const now = new Date();
+        const hour = now.getHours();
+        const bg = getDashboardThemeByHour(hour);
+        document.body.style.backgroundImage = `url('${bg}')`;
+      }
+
+      applyDashboardTheme();
+      setInterval(applyDashboardTheme, 15 * 60 * 1000);
+    </script>
+  </body>
 </html>

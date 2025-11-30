@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>DoctorX Garden - Plant Nanny Web</title>
+
+  <!-- Chart.js cho vòng tròn tiến độ -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+
+      /* nền sẽ đổi theo class theme-... */
+      background-color: #000;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      transition: background-image 0.4s ease-in-out, background-color 0.4s ease-in-out;
+
+      color: #0b1f3b;
+      padding: 24px 16px 40px;
+    }
+
+    /* 4 theme nền */
+    body.theme-desert   { background-image: url("/static/bg_desert.png"); }
+    body.theme-garden   { background-image: url("/static/bg_garden.png"); }
+    body.theme-paradise { background-image: url("/static/bg_paradise.png"); }
+    body.theme-ocean    { background-image: url("/static/bg_ocean.png"); }
+
+    .top-bar {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+    }
+
+    .btn-logout {
+      background: #000;
+      color: #fff;
+    }
+
+    .btn-back {
+      background: rgba(255,255,255,0.9);
+      color: #111827;
+    }
+
+    .garden-wrapper {
+      width: 100%;
+      max-width: 1100px;
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1.8fr);
+      gap: 28px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .garden-wrapper {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .card {
+      background: rgba(255,255,255,0.92);
+      border-radius: 20px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+      padding: 20px 22px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #111827;
+    }
+
+    .card-sub {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 18px;
+    }
+
+    /* Plant zone */
+    .plant-zone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .plant-stage-label {
+      font-size: 15px;
+      font-weight: 600;
+      margin-top: 8px;
+      margin-bottom: 4px;
+    }
+
+    .plant-mood-text {
+      font-size: 13px;
+      color: #4b5563;
+      text-align: center;
+    }
+
+    .plant-avatar-wrapper {
+      margin-top: 16px;
+      margin-bottom: 10px;
+      width: 260px;
+      height: 260px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .plant-avatar {
+      width: 100%;
+      height: 100%;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center bottom;
+      transition: transform 0.25s ease, filter 0.25s ease;
+    }
+
+    /* 4 trạng thái của cây (avatar) */
+    .plant-avatar.dry {
+      background-image: url("/static/plant_dry.png");
+      filter: grayscale(0.2) saturate(0.7);
+      transform: translateY(4px) scale(0.95);
+    }
+
+    .plant-avatar.growing {
+      background-image: url("/static/plant_growing.png");
+    }
+
+    .plant-avatar.healthy {
+      background-image: url("/static/plant_healthy.png");
+    }
+
+    .plant-avatar.blooming {
+      background-image: url("/static/plant_bloom.png");
+      transform: translateY(-4px) scale(1.03);
+    }
+
+    /* Progress circle */
+    .progress-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    .progress-inner {
+      position: relative;
+      width: 160px;
+      height: 160px;
+    }
+
+    .progress-inner canvas {
+      width: 160px;
+      height: 160px;
+    }
+
+    .progress-center-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 18px;
+      font-weight: 700;
+      color: #2563eb;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .metrics-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .metrics-list li {
+      margin-bottom: 6px;
+    }
+
+    .metrics-label {
+      font-weight: 600;
+    }
+
+    .metrics-value {
+      font-weight: 700;
+      color: #2563eb;
+    }
+
+    .streak-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #0f172a;
+      color: #fef3c7;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .streak-badge span {
+      margin-right: 4px;
+    }
+
+    .warn-text {
+      font-size: 13px;
+      color: #b91c1c;
+      margin-top: 8px;
+    }
+
+    /* 3 ô trắng mô phỏng */
+    .summary-boxes {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .summary-box {
+      background: rgba(255, 255, 255, 0.75);
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.9);
+      padding: 8px 16px;
+      backdrop-filter: blur(6px);
+    }
+
+    .summary-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #4b5563;
+      margin-bottom: 4px;
+    }
+
+    .summary-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    /* Hàng nút +100ml & Reset */
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Nút xanh nước biển pastel */
+    .btn-ml {
+      background: rgba(59, 130, 246, 0.9);
+      color: #f9fafb;
+      border: 1px solid #1d4ed8;
+    }
+
+    /* Nút Reset xám trong suốt */
+    .btn-reset {
+      background: rgba(148, 163, 184, 0.85);
+      color: #111827;
+      border: 1px solid #4b5563;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <button class="btn btn-back" id="btn-back-dashboard">← Dashboard</button>
+    <button class="btn btn-logout" id="btn-logout">Đăng xuất</button>
+  </div>
+
+  <div class="garden-wrapper">
+    <!-- CỘT 1: CÂY + PROGRESS HÔM NAY -->
+    <section class="card">
+      <div class="card-title">Vườn DoctorX</div>
+      <div class="card-sub" id="welcome-text">Đang tải dữ liệu...</div>
+
+      <div class="plant-zone">
+        <div class="plant-avatar-wrapper">
+          <!-- avatar cây, ảnh sẽ đổi theo class -->
+          <div class="plant-avatar dry" id="plant-avatar"></div>
+        </div>
+        <div class="plant-stage-label" id="plant-stage-label">Cây đang khát nước</div>
+        <div class="plant-mood-text" id="plant-mood-text">
+          Hãy uống một ngụm nước để “tưới” cho cây nhé.
+        </div>
+      </div>
+
+      <div class="progress-wrapper">
+        <div class="progress-inner">
+          <canvas id="chart-today"></canvas>
+          <div class="progress-center-text" id="today-center-text">-- / --</div>
+        </div>
+      </div>
+
+      <!-- 3 ô trắng mô phỏng -->
+      <div class="summary-boxes">
+        <!-- Ô 1: Đã mô phỏng + số ml đã uống -->
+        <div class="summary-box">
+          <div class="summary-title">Đã mô phỏng</div>
+          <div class="summary-value">
+            <span id="sim-amount-text">0</span> ml
+          </div>
+        </div>
+
+        <!-- Ô 2: Trạng thái cây -->
+        <div class="summary-box">
+          <div class="summary-title">Trạng thái cây</div>
+          <div class="summary-value" id="plant-state-box-text">
+            Khô héo
+          </div>
+        </div>
+
+        <!-- Ô 3: Số ngày đã thực hiện -->
+        <div class="summary-box">
+          <div class="summary-title">Số ngày đã thực hiện</div>
+          <div class="summary-value">
+            <span id="days-count-text">0</span> ngày
+          </div>
+        </div>
+      </div>
+
+      <!-- Hàng nút +100 ml & Reset -->
+      <div class="btn-row">
+        <button class="btn btn-ml" id="btn-plus-100" data-amount="100">+100 ml</button>
+        <button class="btn btn-reset" id="btn-reset">Reset</button>
+      </div>
+
+      <p class="warn-text" id="manual-warn"></p>
+    </section>
+
+    <!-- CỘT 2: LỊCH SỬ & STREAK -->
+    <section class="card">
+      <div class="card-title">Lịch sử & Streak</div>
+      <div class="card-sub">
+        Dựa trên dữ liệu từ thiết bị IoT và Doctor.X.
+      </div>
+
+      <div>
+        <div class="streak-badge">
+          <span>🔥</span> <span id="streak-text">Streak: -- ngày</span>
+        </div>
+      </div>
+
+      <div style="margin-top: 16px;" id="history-summary">
+        Đang tải lịch sử...
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ==== CẤU HÌNH CƠ BẢN ====
+    const DEFAULT_TARGET_ML = 2000;   // fallback nếu không có target nào trong payload
+    const STREAK_THRESHOLD = 0.8;     // ≥ 80% target tính là "hoàn thành"
+
+    const token = localStorage.getItem("access_token");
+    const userEmail = localStorage.getItem("user_email");
+
+    if (!token) {
+      window.location.href = "/app";
+    }
+
+    const welcomeTextEl = document.getElementById("welcome-text");
+    const todayCenterTextEl = document.getElementById("today-center-text");
+    const todayAmountTextEl = document.getElementById("today-amount-text"); // có thể null (đã bỏ metrics list)
+    const targetTextEl = document.getElementById("target-text");
+    const remainingTextEl = document.getElementById("remaining-text");
+    const streakTextEl = document.getElementById("streak-text");
+    const historySummaryEl = document.getElementById("history-summary");
+    const manualWarnEl = document.getElementById("manual-warn");
+
+    const plantAvatarEl = document.getElementById("plant-avatar");
+    const plantStageLabelEl = document.getElementById("plant-stage-label");
+    const plantMoodTextEl = document.getElementById("plant-mood-text");
+
+    // Các ô mô phỏng + nút
+    const simAmountEl = document.getElementById("sim-amount-text");
+    const daysCountEl = document.getElementById("days-count-text");
+    const plantStateBoxEl = document.getElementById("plant-state-box-text");
+    const btnPlus100 = document.getElementById("btn-plus-100");
+    const btnReset = document.getElementById("btn-reset");
+
+    // Biến mô phỏng: ml đã uống & số ngày
+    let simMl = 0;
+    let simDays = 0;
+
+    function updateSimUI() {
+      if (simAmountEl) simAmountEl.textContent = simMl.toString();
+      if (daysCountEl) daysCountEl.textContent = simDays.toString();
+    }
+
+    if (userEmail) {
+      const namePart = userEmail.split("@")[0];
+      welcomeTextEl.textContent = `Xin chào, ${namePart || userEmail}! Mỗi ngụm nước của bạn sẽ tưới cho cây.`;
+    } else {
+      welcomeTextEl.textContent = "Xin chào! Mỗi ngụm nước của bạn sẽ tưới cho cây.";
+    }
+
+    document.getElementById("btn-logout").addEventListener("click", () => {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("user_email");
+      window.location.href = "/app";
+    });
+
+    document.getElementById("btn-back-dashboard").addEventListener("click", () => {
+      window.location.href = "/dashboard";
+    });
+
+    // CHART
+    let chartToday = null;
+    function createOrUpdateDoughnut(chartRef, ctx, value, max, colorMain) {
+      const safeMax = max <= 0 ? 1 : max;
+      const v = Math.min(Math.max(value, 0), safeMax);
+      const remain = safeMax - v;
+
+      const data = {
+        labels: ["Đã uống", "Còn lại"],
+        datasets: [
+          {
+            data: [v, remain],
+            backgroundColor: [colorMain, "#e5e7eb"],
+            borderWidth: 0,
+          },
+        ],
+      };
+
+      const options = {
+        cutout: "70%",
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: true },
+        },
+      };
+
+      if (chartRef && chartRef instanceof Chart) {
+        chartRef.data = data;
+        chartRef.options = options;
+        chartRef.update();
+        return chartRef;
+      } else {
+        return new Chart(ctx, {
+          type: "doughnut",
+          data,
+          options,
+        });
+      }
+    }
+
+    // Áp dụng trạng thái cây + theme nền dựa theo phần trăm target
+    function updatePlantState(percent) {
+      plantAvatarEl.classList.remove("dry", "growing", "healthy", "blooming");
+      document.body.classList.remove(
+        "theme-desert",
+        "theme-garden",
+        "theme-paradise",
+        "theme-ocean"
+      );
+
+      let shortStatus = "Khô héo";
+
+      if (percent <= 0.25) {
+        // 0–25% target: sa mạc + cây khô
+        plantAvatarEl.classList.add("dry");
+        document.body.classList.add("theme-desert");
+        shortStatus = "Khô héo";
+        plantMoodTextEl.textContent = "Bạn uống cực kỳ ít. Cây đang sắp héo, uống ngay một ly nước đi.";
+      } else if (percent < 0.75) {
+        // 25–75%: khu vườn
+        plantAvatarEl.classList.add("growing");
+        document.body.classList.add("theme-garden");
+        shortStatus = "Phát triển";
+        plantMoodTextEl.textContent = "Bạn đang đi đúng hướng. Uống thêm vài lần nữa là ổn.";
+      } else if (percent < 1.1) {
+        // 75–110%: thiên đường
+        plantAvatarEl.classList.add("healthy");
+        document.body.classList.add("theme-paradise");
+        shortStatus = "Sống tốt";
+        plantMoodTextEl.textContent = "Hôm nay bạn gần như đã đạt mục tiêu. Cố thêm chút nữa!";
+      } else {
+        // >110%: thủy cung
+        plantAvatarEl.classList.add("blooming");
+        document.body.classList.add("theme-ocean");
+        shortStatus = "Nở hoa";
+        plantMoodTextEl.textContent = "Quá đỉnh! Bạn đã vượt mục tiêu hôm nay!";
+      }
+
+      // label trên cây
+      plantStageLabelEl.textContent = shortStatus;
+      // và trong ô trắng thứ 2
+      if (plantStateBoxEl) {
+        plantStateBoxEl.textContent = shortStatus;
+      }
+    }
+
+    // Tính streak từ map ngày -> tổng ml
+    function computeStreak(dayToTotal, dayToTarget) {
+      const today = new Date();
+      let streak = 0;
+      for (let i = 0; i < 30; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        const total = dayToTotal[key] || 0;
+        const target = dayToTarget[key] || DEFAULT_TARGET_ML;
+        const ratio = target > 0 ? total / target : 0;
+        if (ratio >= STREAK_THRESHOLD) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+      return streak;
+    }
+
+    // ====== LOGIC +100 ml & RESET (mô phỏng phía client) ======
+    if (btnPlus100) {
+      btnPlus100.addEventListener("click", () => {
+        // cộng +100 ml vào ô trắng đầu tiên
+        simMl += 100;
+        updateSimUI();
+      });
+    }
+
+    if (btnReset) {
+      btnReset.addEventListener("click", () => {
+        // Nếu đang có ml > 0: reset ml về 0 và +1 ngày
+        // Nếu đã 0 mà bấm Reset lần nữa: reset luôn số ngày về 0
+        if (simMl > 0) {
+          simMl = 0;
+          simDays += 1;
+        } else {
+          simMl = 0;
+          simDays = 0;
+        }
+        updateSimUI();
+      });
+    }
+
+    // Khởi tạo UI mô phỏng
+    updateSimUI();
+
+    // Gửi ingest thủ công (vẫn dùng cho IoT thật khi bấm +100 ml)
+    async function sendManualIntake(amount) {
+      manualWarnEl.textContent = "";
+      try {
+        const devResp = await fetch("/devices", {
+          headers: { Authorization: "Bearer " + token },
+        });
+        const devs = await devResp.json().catch(() => []);
+        if (!devResp.ok || !Array.isArray(devs) || devs.length === 0) {
+          manualWarnEl.textContent = "Không tìm thấy device để gửi dữ liệu. Hãy tạo device trước.";
+          return;
+        }
+        const dev = devs[0];
+
+        if (!dev.api_key) {
+          manualWarnEl.textContent = "Không có API key cho device. Kiểm tra lại cấu hình backend.";
+          return;
+        }
+
+        const payload = {
+          device_id: dev.device_id,
+          api_key: dev.api_key,
+          metric_type: "water_intake_ml",
+          value: Number(amount),
+          payload: {
+            source: "web_manual",
+            volume_ml: Number(amount),
+          },
+        };
+
+        const res = await fetch("/ingest/telemetry", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          manualWarnEl.textContent = "Không gửi được dữ liệu: " + (data.detail || res.status);
+          return;
+        }
+
+        manualWarnEl.textContent = "Đã ghi nhận +" + amount + " ml. Đang cập nhật lại cây...";
+        await loadGardenData(); // reload số liệu
+      } catch (e) {
+        console.error(e);
+        manualWarnEl.textContent = "Lỗi mạng khi gửi ingest thủ công.";
+      }
+    }
+
+    // Gắn sendManualIntake cho các nút .btn-ml (ở đây chỉ còn nút +100 ml)
+    document.querySelectorAll(".btn-ml").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const amount = Number(btn.dataset.amount || "0");
+        if (amount > 0) {
+          sendManualIntake(amount);
+        }
+      });
+    });
+
+    // Load dữ liệu giống logic cũ nhưng có thể không còn metrics-list
+    async function loadGardenData() {
+      try {
+        // 1. Lấy device
+        const devResp = await fetch("/devices", {
+          headers: { Authorization: "Bearer " + token },
+        });
+        if (!devResp.ok) {
+          historySummaryEl.textContent = "Không lấy được danh sách device (" + devResp.status + ").";
+          return;
+        }
+        const devices = await devResp.json();
+        if (!Array.isArray(devices) || devices.length === 0) {
+          historySummaryEl.textContent = "Chưa có device nào. Hãy vào Dashboard để tạo device.";
+          todayCenterTextEl.textContent = "-- / --";
+          updatePlantState(0);
+          return;
+        }
+        const firstDeviceId = devices[0].device_id;
+
+        // 2. Lấy telemetry
+        const telResp = await fetch(`/devices/${encodeURIComponent(firstDeviceId)}/telemetry?limit=200`, {
+          headers: { Authorization: "Bearer " + token },
+        });
+        if (!telResp.ok) {
+          historySummaryEl.textContent = "Không tải được telemetry (" + telResp.status + ").";
+          return;
+        }
+        const list = await telResp.json();
+        if (!Array.isArray(list) || list.length === 0) {
+          historySummaryEl.textContent = "Chưa có dữ liệu uống nước nào từ device.";
+          todayCenterTextEl.textContent = "-- / --";
+          updatePlantState(0);
+          return;
+        }
+
+        const today = new Date();
+        const todayStr = today.toISOString().slice(0, 10);
+
+        let totalToday = 0;
+        let inferredTargetToday = 0;
+
+        const dayToTotal = {};
+        const dayToTarget = {};
+
+        list.forEach(t => {
+          if (!t.ts) return;
+          const dateStr = t.ts.slice(0, 10);
+
+          // tổng daily
+          let ml = 0;
+          if (typeof t.value === "number") {
+            ml = t.value;
+          } else if (t.payload && t.payload.volume_ml) {
+            ml = Number(t.payload.volume_ml) || 0;
+          }
+          dayToTotal[dateStr] = (dayToTotal[dateStr] || 0) + ml;
+
+          // target (nếu Doctor.X gửi target_ml trong payload)
+          if (t.payload && t.payload.target_ml) {
+            const target = Number(t.payload.target_ml) || 0;
+            if (target > 0) {
+              dayToTarget[dateStr] = target;
+              if (dateStr === todayStr) {
+                inferredTargetToday = target;
+              }
+            }
+          }
+        });
+
+        totalToday = dayToTotal[todayStr] || 0;
+        const targetToday = inferredTargetToday || DEFAULT_TARGET_ML;
+
+        const remaining = Math.max(targetToday - totalToday, 0);
+        const percent = targetToday > 0 ? totalToday / targetToday : 0;
+
+        // Cập nhật UI nước hôm nay (nếu còn dùng)
+        const totalStr = totalToday.toLocaleString("vi-VN");
+        const targetStr = targetToday.toLocaleString("vi-VN");
+        const remainingStr = remaining.toLocaleString("vi-VN");
+
+        if (todayAmountTextEl) {
+          todayAmountTextEl.textContent = totalStr + " ml";
+        }
+        if (targetTextEl) {
+          targetTextEl.textContent = targetStr + " ml";
+        }
+        if (remainingTextEl) {
+          remainingTextEl.textContent = remainingStr + " ml";
+        }
+        todayCenterTextEl.textContent = `${Math.round(percent * 100)}%`;
+
+        const ctx = document.getElementById("chart-today").getContext("2d");
+        chartToday = createOrUpdateDoughnut(chartToday, ctx, totalToday, targetToday, "#22c55e");
+
+        // Cập nhật cây + theme nền
+        updatePlantState(percent);
+
+        // Tính streak
+        const streak = computeStreak(dayToTotal, dayToTarget);
+        streakTextEl.textContent = `Streak: ${streak} ngày`;
+
+        // Tóm tắt lịch sử 7 ngày gần nhất
+        const days = [];
+        const historyLines = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(today);
+          d.setDate(today.getDate() - i);
+          const key = d.toISOString().slice(0, 10);
+          days.push(key);
+        }
+        days.forEach(dStr => {
+          const total = dayToTotal[dStr] || 0;
+          const target = dayToTarget[dStr] || DEFAULT_TARGET_ML;
+          const ratio = target > 0 ? total / target : 0;
+          let status = "";
+          if (ratio >= 1) status = "✅";
+          else if (ratio >= STREAK_THRESHOLD) status = "🟡";
+          else status = "⚠️";
+
+          historyLines.push(
+            `${dStr}: ${total.toLocaleString("vi-VN")} / ${target.toLocaleString("vi-VN")} ml ${status}`
+          );
+        });
+
+        historySummaryEl.innerHTML =
+          "<p><b>7 ngày gần nhất:</b></p><pre style='font-size:13px; white-space:pre-wrap;'>" +
+          historyLines.join("\n") +
+          "</pre>";
+      } catch (err) {
+        console.error(err);
+        historySummaryEl.textContent = "Lỗi khi tải dữ liệu: " + err;
+      }
+    }
+
+    loadGardenData();
+  </script>
+</body>
+</html>

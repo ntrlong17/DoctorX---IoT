@@ -503,6 +503,16 @@ async def serve_dashboard():
         )
     return FileResponse(dash_file)
 
+@app.get("/garden", include_in_schema=False)
+async def serve_garden():
+    garden_file = FRONTEND_DIR / "plant.html"
+    if not garden_file.exists():
+        raise HTTPException(
+            status_code=500,
+            detail=f"plant.html not found at {garden_file}"
+        )
+    return FileResponse(garden_file)
+
 
 @app.get("/forgot-password", include_in_schema=False)
 def serve_forgot_password():
