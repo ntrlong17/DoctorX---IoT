@@ -1,0 +1,9 @@
+{
+  "device_id": "water_station",
+  "api_key": "567b73411887e261fa66201905a71f96",
+  "metric_type": "water_intake_ml",
+  "value": 200,
+  "payload": {
+    "volume_ml": 200
+  }
+}

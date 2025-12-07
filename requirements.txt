@@ -1,7 +1,12 @@
 fastapi
 uvicorn[standard]
 sqlalchemy
+pydantic[email]
 python-multipart
+python-dotenv
 passlib
-python-jose
+python-jose[cryptography]
+email-validator
 jinja2
+paho-mqtt
+requests

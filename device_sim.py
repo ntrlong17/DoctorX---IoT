@@ -4,7 +4,8 @@ import random
 import sys
 
 # Server đang chạy trên chính máy bạn, port 8000
-BACKEND_URL = "https://hurried-paul-postmyxedematous.ngrok-free.dev"
+BACKEND_URL = "http://127.0.0.1:8000"
+
 
 
 def run_device(device_id: str, api_key: str, interval_sec: int = 5):

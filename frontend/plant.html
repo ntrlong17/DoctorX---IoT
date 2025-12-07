@@ -241,55 +241,16 @@
       margin-top: 8px;
     }
 
-    /* 3 ô trắng mô phỏng */
-    .summary-boxes {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .summary-box {
-      background: rgba(255, 255, 255, 0.75);
-      border-radius: 16px;
-      border: 1px solid rgba(148, 163, 184, 0.9);
-      padding: 8px 16px;
-      backdrop-filter: blur(6px);
-    }
-
-    .summary-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: #4b5563;
-      margin-bottom: 4px;
-    }
-
-    .summary-value {
-      font-size: 18px;
-      font-weight: 700;
-      color: #111827;
-    }
-
-    /* Hàng nút +100ml & Reset */
     .btn-row {
       display: flex;
-      gap: 10px;
-      margin-top: 12px;
+      gap: 8px;
+      margin-top: 8px;
       flex-wrap: wrap;
     }
 
-    /* Nút xanh nước biển pastel */
     .btn-ml {
-      background: rgba(59, 130, 246, 0.9);
+      background: #2563eb;
       color: #f9fafb;
-      border: 1px solid #1d4ed8;
-    }
-
-    /* Nút Reset xám trong suốt */
-    .btn-reset {
-      background: rgba(148, 163, 184, 0.85);
-      color: #111827;
-      border: 1px solid #4b5563;
     }
   </style>
 </head>
@@ -323,37 +284,24 @@
         </div>
       </div>
 
-      <!-- 3 ô trắng mô phỏng -->
-      <div class="summary-boxes">
-        <!-- Ô 1: Đã mô phỏng + số ml đã uống -->
-        <div class="summary-box">
-          <div class="summary-title">Đã mô phỏng</div>
-          <div class="summary-value">
-            <span id="sim-amount-text">0</span> ml
-          </div>
-        </div>
+      <ul class="metrics-list">
+        <li>
+          <span class="metrics-label">Hôm nay:</span>
+          <span class="metrics-value" id="today-amount-text">-- ml</span>
+        </li>
+        <li>
+          <span class="metrics-label">Mục tiêu:</span>
+          <span class="metrics-value" id="target-text">-- ml</span>
+        </li>
+        <li>
+          <span class="metrics-label">Còn thiếu:</span>
+          <span class="metrics-value" id="remaining-text">-- ml</span>
+        </li>
+      </ul>
 
-        <!-- Ô 2: Trạng thái cây -->
-        <div class="summary-box">
-          <div class="summary-title">Trạng thái cây</div>
-          <div class="summary-value" id="plant-state-box-text">
-            Khô héo
-          </div>
-        </div>
-
-        <!-- Ô 3: Số ngày đã thực hiện -->
-        <div class="summary-box">
-          <div class="summary-title">Số ngày đã thực hiện</div>
-          <div class="summary-value">
-            <span id="days-count-text">0</span> ngày
-          </div>
-        </div>
-      </div>
-
-      <!-- Hàng nút +100 ml & Reset -->
       <div class="btn-row">
-        <button class="btn btn-ml" id="btn-plus-100" data-amount="100">+100 ml</button>
-        <button class="btn btn-reset" id="btn-reset">Reset</button>
+        <button class="btn btn-ml" data-amount="100">+100 ml</button>
+        <button class="btn btn-ml" data-amount="250">+250 ml</button>
       </div>
 
       <p class="warn-text" id="manual-warn"></p>
@@ -392,7 +340,7 @@
 
     const welcomeTextEl = document.getElementById("welcome-text");
     const todayCenterTextEl = document.getElementById("today-center-text");
-    const todayAmountTextEl = document.getElementById("today-amount-text"); // có thể null (đã bỏ metrics list)
+    const todayAmountTextEl = document.getElementById("today-amount-text");
     const targetTextEl = document.getElementById("target-text");
     const remainingTextEl = document.getElementById("remaining-text");
     const streakTextEl = document.getElementById("streak-text");
@@ -402,22 +350,6 @@
     const plantAvatarEl = document.getElementById("plant-avatar");
     const plantStageLabelEl = document.getElementById("plant-stage-label");
     const plantMoodTextEl = document.getElementById("plant-mood-text");
-
-    // Các ô mô phỏng + nút
-    const simAmountEl = document.getElementById("sim-amount-text");
-    const daysCountEl = document.getElementById("days-count-text");
-    const plantStateBoxEl = document.getElementById("plant-state-box-text");
-    const btnPlus100 = document.getElementById("btn-plus-100");
-    const btnReset = document.getElementById("btn-reset");
-
-    // Biến mô phỏng: ml đã uống & số ngày
-    let simMl = 0;
-    let simDays = 0;
-
-    function updateSimUI() {
-      if (simAmountEl) simAmountEl.textContent = simMl.toString();
-      if (daysCountEl) daysCountEl.textContent = simDays.toString();
-    }
 
     if (userEmail) {
       const namePart = userEmail.split("@")[0];
@@ -486,39 +418,30 @@
         "theme-ocean"
       );
 
-      let shortStatus = "Khô héo";
-
       if (percent <= 0.25) {
         // 0–25% target: sa mạc + cây khô
         plantAvatarEl.classList.add("dry");
         document.body.classList.add("theme-desert");
-        shortStatus = "Khô héo";
-        plantMoodTextEl.textContent = "Bạn uống cực kỳ ít. Cây đang sắp héo, uống ngay một ly nước đi.";
+        plantStageLabelEl.textContent = "Sa mạc khô hạn";
+        plantMoodTextEl.textContent   = "Bạn uống cực kỳ ít. Cây đang sắp héo, uống ngay một ly nước đi.";
       } else if (percent < 0.75) {
         // 25–75%: khu vườn
         plantAvatarEl.classList.add("growing");
         document.body.classList.add("theme-garden");
-        shortStatus = "Phát triển";
-        plantMoodTextEl.textContent = "Bạn đang đi đúng hướng. Uống thêm vài lần nữa là ổn.";
+        plantStageLabelEl.textContent = "Khu vườn đang xanh dần";
+        plantMoodTextEl.textContent   = "Bạn đang đi đúng hướng. Uống thêm vài lần nữa là ổn.";
       } else if (percent < 1.1) {
         // 75–110%: thiên đường
         plantAvatarEl.classList.add("healthy");
         document.body.classList.add("theme-paradise");
-        shortStatus = "Sống tốt";
-        plantMoodTextEl.textContent = "Hôm nay bạn gần như đã đạt mục tiêu. Cố thêm chút nữa!";
+        plantStageLabelEl.textContent = "Thiên đường xanh mát";
+        plantMoodTextEl.textContent   = "Hôm nay bạn gần như đã đạt mục tiêu. Cố thêm chút nữa!";
       } else {
         // >110%: thủy cung
         plantAvatarEl.classList.add("blooming");
         document.body.classList.add("theme-ocean");
-        shortStatus = "Nở hoa";
-        plantMoodTextEl.textContent = "Quá đỉnh! Bạn đã vượt mục tiêu hôm nay!";
-      }
-
-      // label trên cây
-      plantStageLabelEl.textContent = shortStatus;
-      // và trong ô trắng thứ 2
-      if (plantStateBoxEl) {
-        plantStateBoxEl.textContent = shortStatus;
+        plantStageLabelEl.textContent = "Thủy cung rực rỡ";
+        plantMoodTextEl.textContent   = "Quá đỉnh! Bạn đã vượt mục tiêu hôm nay!";
       }
     }
 
@@ -542,34 +465,7 @@
       return streak;
     }
 
-    // ====== LOGIC +100 ml & RESET (mô phỏng phía client) ======
-    if (btnPlus100) {
-      btnPlus100.addEventListener("click", () => {
-        // cộng +100 ml vào ô trắng đầu tiên
-        simMl += 100;
-        updateSimUI();
-      });
-    }
-
-    if (btnReset) {
-      btnReset.addEventListener("click", () => {
-        // Nếu đang có ml > 0: reset ml về 0 và +1 ngày
-        // Nếu đã 0 mà bấm Reset lần nữa: reset luôn số ngày về 0
-        if (simMl > 0) {
-          simMl = 0;
-          simDays += 1;
-        } else {
-          simMl = 0;
-          simDays = 0;
-        }
-        updateSimUI();
-      });
-    }
-
-    // Khởi tạo UI mô phỏng
-    updateSimUI();
-
-    // Gửi ingest thủ công (vẫn dùng cho IoT thật khi bấm +100 ml)
+    // Gửi ingest thủ công
     async function sendManualIntake(amount) {
       manualWarnEl.textContent = "";
       try {
@@ -619,7 +515,6 @@
       }
     }
 
-    // Gắn sendManualIntake cho các nút .btn-ml (ở đây chỉ còn nút +100 ml)
     document.querySelectorAll(".btn-ml").forEach(btn => {
       btn.addEventListener("click", () => {
         const amount = Number(btn.dataset.amount || "0");
@@ -629,7 +524,7 @@
       });
     });
 
-    // Load dữ liệu giống logic cũ nhưng có thể không còn metrics-list
+    // Load dữ liệu giống logic trong dashboard.html nhưng thêm streak + plant state
     async function loadGardenData() {
       try {
         // 1. Lấy device
@@ -705,20 +600,14 @@
         const remaining = Math.max(targetToday - totalToday, 0);
         const percent = targetToday > 0 ? totalToday / targetToday : 0;
 
-        // Cập nhật UI nước hôm nay (nếu còn dùng)
+        // Cập nhật UI nước hôm nay
         const totalStr = totalToday.toLocaleString("vi-VN");
         const targetStr = targetToday.toLocaleString("vi-VN");
         const remainingStr = remaining.toLocaleString("vi-VN");
 
-        if (todayAmountTextEl) {
-          todayAmountTextEl.textContent = totalStr + " ml";
-        }
-        if (targetTextEl) {
-          targetTextEl.textContent = targetStr + " ml";
-        }
-        if (remainingTextEl) {
-          remainingTextEl.textContent = remainingStr + " ml";
-        }
+        todayAmountTextEl.textContent = totalStr + " ml";
+        targetTextEl.textContent = targetStr + " ml";
+        remainingTextEl.textContent = remainingStr + " ml";
         todayCenterTextEl.textContent = `${Math.round(percent * 100)}%`;
 
         const ctx = document.getElementById("chart-today").getContext("2d");

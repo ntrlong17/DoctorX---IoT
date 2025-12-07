@@ -9,16 +9,17 @@
     body {
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: url("Theme.png") center/cover no-repeat fixed;
+      background: radial-gradient(circle at top, #1d4ed8 0, #020617 55%, #000 100%);
       color: #0f172a;
+      min-height: 100vh;
     }
 
     .overlay {
       min-height: 100vh;
       background: linear-gradient(
         to bottom,
-        rgba(15, 23, 42, 0.6),
-        rgba(15, 23, 42, 0.4)
+        rgba(15, 23, 42, 0.65),
+        rgba(15, 23, 42, 0.85)
       );
       display: flex;
       flex-direction: column;
@@ -33,34 +34,81 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 24px;
-      color: #f9fafb;
+      color: #e5e7eb;
+      font-size: 14px;
+    }
+
+    .left-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .left-top-title {
+      font-weight: 600;
+      font-size: 16px;
     }
 
     .btn {
       border: none;
       border-radius: 999px;
       padding: 8px 18px;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       background: #020617;
       color: #f9fafb;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn:hover {
+      background: #111827;
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+
+    .user-block {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .user-email {
+      font-size: 13px;
+      opacity: 0.85;
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: right;
     }
 
     .card {
-     width: 100%;
-    max-width: 1100px;
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 24px;
-    padding: 24px;
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
-    min-height: 500px; /* THÊM DÒNG NÀY */
+      width: 100%;
+      max-width: 1100px;
+      background: rgba(248, 250, 252, 0.96);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+      min-height: 480px;
+      display: flex;
+      flex-direction: column;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      color: #0f172a;
     }
 
-
-    h1 {
-      margin: 0 0 16px;
-      font-size: 26px;
+    .subtitle {
+      margin: 0 0 20px;
+      font-size: 14px;
+      color: #6b7280;
     }
 
     #no-data {
@@ -72,37 +120,67 @@
 
     .chart-wrapper {
       width: 100%;
-      height: 380px;
+      height: 360px;
     }
+
     #water-bar-chart {
-    width: 100% !important;
-        height: 100% !important;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .summary-line {
+      margin-top: 12px;
+      font-size: 14px;
+      color: #0f172a;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .summary-item {
+      font-weight: 500;
     }
 
     @media (max-width: 768px) {
       .overlay { padding: 16px; }
       .card { padding: 16px; border-radius: 18px; }
-      h1 { font-size: 22px; }
+      h1 { font-size: 20px; }
+      .subtitle { font-size: 13px; }
+      .top-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .user-block { align-self: flex-end; }
     }
   </style>
 </head>
 <body>
   <div class="overlay">
     <div class="top-bar">
-      <button class="btn" id="btn-back">&larr; Quay lại dashboard</button>
-      <div>
-        <span id="user-email"></span>
+      <div class="left-top">
+        <button class="btn" id="btn-back">&larr; Quay lại dashboard</button>
+        <span class="left-top-title">Chi tiết uống nước hôm nay</span>
+      </div>
+      <div class="user-block">
+        <span class="user-email" id="user-email"></span>
         <button class="btn" id="btn-logout">Đăng xuất</button>
       </div>
     </div>
 
     <div class="card">
       <h1>Chi tiết các lần uống nước</h1>
+      <p class="subtitle">
+        Biểu đồ cột hiển thị từng lần uống nước trong ngày (ml theo thời gian).
+      </p>
 
       <div class="chart-wrapper">
         <canvas id="water-bar-chart"></canvas>
       </div>
-      <div id="no-data">Chưa có dữ liệu trong ngày</div>
+      <div id="no-data">Đang tải dữ liệu...</div>
+
+      <div class="summary-line">
+        <span class="summary-item" id="sum-total">Tổng hôm nay: 0 ml</span>
+        <span class="summary-item" id="sum-count">Số lần uống: 0 lần</span>
+        <span class="summary-item" id="sum-max">Lần nhiều nhất: 0 ml</span>
+      </div>
     </div>
   </div>
 
@@ -125,123 +203,148 @@
     };
 
     const noDataEl = document.getElementById("no-data");
+    const sumTotalEl = document.getElementById("sum-total");
+    const sumCountEl = document.getElementById("sum-count");
+    const sumMaxEl = document.getElementById("sum-max");
     let barChart = null;
 
     async function fetchDevices() {
-      const res = await fetch("/devices", {
-        headers: { Authorization: "Bearer " + token }
-      });
-      if (!res.ok) {
-        noDataEl.textContent = "Không lấy được danh sách thiết bị: " + res.status;
+      try {
+        const res = await fetch("/devices", {
+          headers: { Authorization: "Bearer " + token }
+        });
+        if (!res.ok) {
+          noDataEl.textContent = "Không lấy được danh sách thiết bị: " + res.status;
+          noDataEl.style.display = "block";
+          return [];
+        }
+        const devices = await res.json();
+        return devices;
+      } catch (err) {
+        noDataEl.textContent = "Lỗi kết nối khi lấy danh sách thiết bị.";
         noDataEl.style.display = "block";
         return [];
       }
-      const devices = await res.json();
-      return devices;
     }
 
     async function loadChartForToday(deviceId) {
       if (!deviceId) {
-        noDataEl.textContent = "Chưa có dữ liệu trong ngày";
+        noDataEl.textContent = "Chưa có thiết bị nào được cấu hình.";
         noDataEl.style.display = "block";
         return;
       }
 
-      const res = await fetch(`/devices/${deviceId}/telemetry?limit=300`, {
-        headers: { Authorization: "Bearer " + token }
-      });
+      try {
+        const res = await fetch(`/devices/${deviceId}/telemetry?limit=300`, {
+          headers: { Authorization: "Bearer " + token }
+        });
 
-      if (!res.ok) {
-        noDataEl.textContent = "Lỗi khi lấy telemetry: " + res.status;
-        noDataEl.style.display = "block";
-        return;
-      }
-
-      const data = await res.json();
-      const todayStr = new Date().toISOString().slice(0, 10);
-
-      const filtered = data
-        .filter((t) => {
-          if (!t.ts) return false;
-          const dateStr = t.ts.slice(0, 10);
-          const isWater =
-            t.metric_type === "water_intake_ml" ||
-            t.metric_type === "water_intake";
-          return isWater && dateStr === todayStr;
-        })
-        .map((t) => {
-          let ml = 0;
-          if (typeof t.value === "number") {
-            ml = t.value;
-          } else if (t.payload && t.payload.volume_ml) {
-            ml = Number(t.payload.volume_ml) || 0;
-          }
-          return { ts: t.ts, ml };
-        })
-        .sort((a, b) => new Date(a.ts) - new Date(b.ts));
-
-      if (filtered.length === 0) {
-        if (barChart) {
-          barChart.destroy();
-          barChart = null;
+        if (!res.ok) {
+          noDataEl.textContent = "Lỗi khi lấy telemetry: " + res.status;
+          noDataEl.style.display = "block";
+          return;
         }
-        noDataEl.textContent = "Chưa có dữ liệu uống nước hôm nay.";
+
+        const data = await res.json();
+
+        const filtered = data
+          .filter((t) => {
+            if (!t.ts) return false;
+            const isWater =
+              t.metric_type === "water_intake_ml" ||
+              t.metric_type === "water_intake";
+            return isWater;
+          })
+          .map((t) => {
+            let ml = 0;
+            if (typeof t.value === "number") {
+              ml = t.value;
+            } else if (t.payload && t.payload.volume_ml) {
+              ml = Number(t.payload.volume_ml) || 0;
+            }
+            return { ts: t.ts, ml };
+          })
+          .sort((a, b) => new Date(a.ts) - new Date(b.ts));
+        if (filtered.length === 0) {
+          if (barChart) {
+            barChart.destroy();
+            barChart = null;
+          }
+          noDataEl.textContent = "Chưa có dữ liệu uống nước hôm nay.";
+          noDataEl.style.display = "block";
+
+          sumTotalEl.textContent = "Tổng hôm nay: 0 ml";
+          sumCountEl.textContent = "Số lần uống: 0 lần";
+          sumMaxEl.textContent = "Lần nhiều nhất: 0 ml";
+          return;
+        }
+
+        noDataEl.style.display = "none";
+
+        const labels = filtered.map((item) =>
+          new Date(item.ts).toLocaleTimeString("vi-VN", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        );
+        const values = filtered.map((item) => item.ml);
+
+        // Cập nhật summary
+        const total = values.reduce((a, b) => a + b, 0);
+        const count = values.length;
+        const max = Math.max(...values);
+
+        sumTotalEl.textContent = "Tổng hôm nay: " + total + " ml";
+        sumCountEl.textContent = "Số lần uống: " + count + " lần";
+        sumMaxEl.textContent = "Lần nhiều nhất: " + max + " ml";
+
+        const ctx = document.getElementById("water-bar-chart").getContext("2d");
+        if (barChart) barChart.destroy();
+
+        barChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Lượng nước mỗi lần (ml)",
+                data: values,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false },
+            },
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: "Thời gian uống",
+                },
+              },
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: "ml",
+                },
+              },
+            },
+          },
+        });
+      } catch (err) {
+        console.error(err);
+        noDataEl.textContent = "Lỗi kết nối khi lấy dữ liệu uống nước.";
         noDataEl.style.display = "block";
-        return;
       }
-
-      noDataEl.style.display = "none";
-
-      const labels = filtered.map((item) =>
-        new Date(item.ts).toLocaleTimeString("vi-VN", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      );
-      const values = filtered.map((item) => item.ml);
-
-      const ctx = document.getElementById("water-bar-chart").getContext("2d");
-      if (barChart) barChart.destroy();
-
-      barChart = new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels,
-          datasets: [
-            {
-              label: "Lượng nước mỗi lần (ml)",
-              data: values,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false },
-          },
-          scales: {
-            x: {
-              title: {
-                display: true,
-                text: "Thời gian uống",
-              },
-            },
-            y: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: "ml",
-              },
-            },
-          },
-        },
-      });
     }
 
     (async function init() {
       const devices = await fetchDevices();
       if (!devices || devices.length === 0) {
-        noDataEl.textContent = "Chưa có dữ liệu trong ngày";
+        noDataEl.textContent = "Chưa có thiết bị nào được cấu hình.";
         noDataEl.style.display = "block";
         return;
       }

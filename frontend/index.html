@@ -411,6 +411,47 @@
               />
             </div>
           </div>
+  <div class="form-group">
+    <label>Giới tính</label>
+    <div class="input-wrapper">
+      <span class="icon">⚧</span>
+      <select id="reg-gender">
+        <option value="">-- Chọn giới tính --</option>
+        <option value="male">Nam</option>
+        <option value="female">Nữ</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Cân nặng (kg)</label>
+    <div class="input-wrapper">
+      <span class="icon">⚖️</span>
+      <input
+        type="number"
+        id="reg-weight"
+        placeholder="VD: 70"
+        min="30"
+        max="200"
+        step="0.1"
+      />
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Chiều cao (cm)</label>
+    <div class="input-wrapper">
+      <span class="icon">📏</span>
+      <input
+        type="number"
+        id="reg-height"
+        placeholder="VD: 170"
+        min="120"
+        max="220"
+        step="0.5"
+      />
+    </div>
+  </div>
 
           <button class="primary-btn" onclick="register()">ĐĂNG KÝ</button>
           <div class="toggle-link" onclick="showLogin()">
@@ -458,6 +499,15 @@
     async function register() {
       const email = document.getElementById("reg-email").value.trim();
       const pass = document.getElementById("reg-pass").value.trim();
+      const gender = document.getElementById("reg-gender").value;
+      const weight = document.getElementById("reg-weight").value;
+      const height = document.getElementById("reg-height").value;
+
+      if (!gender || !weight || !height) {
+       alert("Vui lòng nhập đầy đủ giới tính, cân nặng, chiều cao");
+      return;
+      }
+
       if (!email || !pass) {
         alert("Nhập email và mật khẩu để đăng ký");
         return;
@@ -466,7 +516,13 @@
         const res = await fetch(API_BASE + "/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password: pass }),
+                body: JSON.stringify({
+        email,
+        password: pass,
+        gender,
+        weight_kg: parseFloat(weight),
+        height_cm: parseFloat(height),
+        }),
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {

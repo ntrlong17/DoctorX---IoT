@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import smtplib
 from email.message import EmailMessage
@@ -5,9 +7,9 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime, timedelta
-from fastapi.responses import FileResponse
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, Float
+from datetime import datetime, timedelta, date
+from fastapi.responses import FileResponse, RedirectResponse
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, Float, func
 from sqlalchemy.orm import sessionmaker, declarative_base, Session, relationship
 from sqlalchemy.types import JSON
 from jose import JWTError, jwt
@@ -15,188 +17,42 @@ from passlib.context import CryptContext
 import secrets
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
-import os
-from fastapi.responses import RedirectResponse
-from fastapi import HTTPException
-
-# ======================
-# CẤU HÌNH DB
-# ======================
-DEFAULT_DB_URL = "sqlite:///./iot_platform.db"
-DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_DB_URL)
-
-# Nếu dùng SQLite thì mới cần connect_args
-connect_args = {}
-if DATABASE_URL.startswith("sqlite"):
-    connect_args = {"check_same_thread": False}
-
-engine = create_engine(
-    DATABASE_URL,
-    connect_args=connect_args,
+from app.db import SessionLocal, Base, engine
+from app.models import User, Device, Telemetry
+from app.schemas import (
+    UserCreate,
+    UserOut,
+    Token,
+    DeviceCreate,
+    DeviceOut,
+    TelemetryIn,
+    TelemetryOut,
+    WaterSummaryOut,
+    WaterHistoryDay,
+    WaterHistoryOut,
+    DashboardOut,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
 )
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+from app.security import (
+    SECRET_KEY,
+    ALGORITHM,
+    get_password_hash,
+    verify_password,
+    create_access_token,
+    create_password_reset_token,
+    verify_password_reset_token,
+    send_password_reset_email,
+    get_user_by_email,
+    authenticate_user,
+    generate_device_api_key,
+)
 
+Base.metadata.create_all(bind=engine)
 # ======================
 # BẢO MẬT (PASSWORD & JWT)
 # ======================
-pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
-
-SECRET_KEY = "super_secret_key_change_me"  # đổi khi deploy thật
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 1 ngày
-
-# ======================
-# SMTP / EMAIL CONFIG
-# ======================
-SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USER = os.getenv("SMTP_USER")      # ví dụ: yourgmail@gmail.com
-SMTP_PASS = os.getenv("SMTP_PASS")      # app password (không phải mật khẩu thường)
-FROM_EMAIL = os.getenv("FROM_EMAIL", SMTP_USER or "no-reply@example.com")
-
-# URL gốc của web, để build link trong email
-BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
-
-
-def send_password_reset_email(to_email: str, reset_token: str):
-    """
-    Gửi email chứa link đặt lại mật khẩu.
-    Nếu chưa cấu hình SMTP, chỉ in link ra console (dev mode).
-    """
-    reset_link = f"{BASE_URL}/reset-password?token={reset_token}"
-
-    # Nếu chưa cấu hình SMTP đầy đủ -> in link ra console cho dev
-    if not (SMTP_HOST and SMTP_PORT and SMTP_USER and SMTP_PASS):
-        print("=== PASSWORD RESET LINK (DEV) ===")
-        print(reset_link)
-        print("=================================")
-        return
-
-    msg = EmailMessage()
-    msg["Subject"] = "DoctorX - Xác nhận quên mật khẩu"
-    msg["From"] = FROM_EMAIL
-    msg["To"] = to_email
-    msg.set_content(
-        f"Bạn hoặc ai đó đã yêu cầu đặt lại mật khẩu tài khoản DoctorX.\n\n"
-        f"Nhấn vào liên kết dưới đây để đặt lại mật khẩu trong 30 phút tới:\n\n"
-        f"{reset_link}\n\n"
-        f"Nếu bạn không yêu cầu, hãy bỏ qua email này."
-    )
-
-    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-        server.starttls()
-        server.login(SMTP_USER, SMTP_PASS)
-        server.send_message(msg)
-
-
-# ======================
-# MODEL DB
-# ======================
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    devices = relationship("Device", back_populates="owner")
-
-
-class Device(Base):
-    __tablename__ = "devices"
-
-    id = Column(Integer, primary_key=True, index=True)
-    device_id = Column(String, unique=True, index=True, nullable=False)
-    name = Column(String, nullable=True)
-    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    api_key = Column(String, nullable=False, unique=True, index=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    is_active = Column(Integer, default=1)  # 1 = active, 0 = inactive
-
-    owner = relationship("User", back_populates="devices")
-    telemetry = relationship("Telemetry", back_populates="device")
-
-
-class Telemetry(Base):
-    __tablename__ = "telemetry"
-
-    id = Column(Integer, primary_key=True, index=True)
-    device_id = Column(String, ForeignKey("devices.device_id"), index=True)
-    ts = Column(DateTime, default=datetime.utcnow, index=True)
-    metric_type = Column(String, nullable=True)   # ví dụ: "water_intake_ml"
-    value = Column(Float, nullable=True)          # ví dụ: 250.0
-    payload = Column(JSON, nullable=True)         # raw data (JSON)
-
-    device = relationship("Device", back_populates="telemetry")
-
-
-Base.metadata.create_all(bind=engine)
-
-# ======================
-# SCHEMA (Pydantic)
-# ======================
-class UserCreate(BaseModel):
-    email: str
-    password: str
-
-
-class UserOut(BaseModel):
-    id: int
-    email: str
-
-    class Config:
-        orm_mode = True
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-class DeviceCreate(BaseModel):
-    device_id: str
-    name: Optional[str] = None
-
-
-class DeviceOut(BaseModel):
-    device_id: str
-    name: Optional[str]
-    api_key: str  # để bạn cấu hình cho thiết bị
-
-    class Config:
-        orm_mode = True
-
-
-class TelemetryIn(BaseModel):
-    device_id: str
-    api_key: str
-    metric_type: Optional[str] = None
-    value: Optional[float] = None
-    payload: Optional[dict] = None
-
-
-class TelemetryOut(BaseModel):
-    ts: datetime
-    metric_type: Optional[str]
-    value: Optional[float]
-    payload: Optional[dict]
-
-    class Config:
-        orm_mode = True
-
-
-# ---- Forgot / Reset password ----
-class ForgotPasswordRequest(BaseModel):
-    email: str
-
-
-class ResetPasswordRequest(BaseModel):
-    token: str
-    new_password: str
-
 
 # ======================
 # DEPENDENCY & HELPER
@@ -208,74 +64,65 @@ def get_db():
     finally:
         db.close()
 
-
-def get_password_hash(password: str) -> str:
-    # bcrypt giới hạn 72 bytes, mình giới hạn 72 ký tự cho đơn giản
-    if len(password) < 6:
-        raise HTTPException(
-            status_code=400,
-            detail="Mật khẩu phải từ 6 ký tự trở lên."
-        )
-    if len(password) > 128:
-        raise HTTPException(
-            status_code=400,
-            detail="Mật khẩu không được dài hơn 128 ký tự."
-        )
-    return pwd_context.hash(password)
-
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-
-def create_password_reset_token(user_id: int, expires_minutes: int = 30) -> str:
+def calc_daily_water_target(user: User) -> float:
     """
-    Tạo JWT riêng cho việc reset password.
-    scope = 'password_reset' để phân biệt với access_token đăng nhập.
+    Tính lượng nước cần uống hằng ngày dựa trên:
+    - giới tính (gender)
+    - cân nặng (kg)
+
+    Công thức:
+        Nam: 35 ml × kg
+        Nữ: 31 ml × kg
     """
-    expire = datetime.utcnow() + timedelta(minutes=expires_minutes)
-    to_encode = {"sub": str(user_id), "scope": "password_reset", "exp": expire}
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+    if not user.weight_kg:
+        return 2000.0   # fallback
+
+    if user.gender == "male":
+        return user.weight_kg * 35
+    else:
+        return user.weight_kg * 31
 
 
-def verify_password_reset_token(token: str) -> Optional[int]:
+def classify_plant_state(total_ml: float) -> str:
+    """Phân loại trạng thái cây dựa trên lượng nước trong ngày."""
+    if total_ml < 500:
+        return "dry"
+    elif total_ml < 1200:
+        return "growing"
+    elif total_ml < 2000:
+        return "healthy"
+    else:
+        return "bloom"
+
+
+def get_time_slot(now: Optional[datetime] = None) -> str:
     """
-    Giải token reset, trả về user_id nếu hợp lệ, ngược lại trả None.
+    Chia time slot trong ngày.
+    Tạm lấy giờ VN = UTC + 7 (đang chạy local nên chấp nhận được).
     """
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        if payload.get("scope") != "password_reset":
-            return None
-        user_id = payload.get("sub")
-        if user_id is None:
-            return None
-        return int(user_id)
-    except JWTError:
-        return None
+    if now is None:
+        now = datetime.utcnow() + timedelta(hours=7)
+
+    h = now.hour
+    if 5 <= h < 11:
+        return "morning"
+    elif 11 <= h < 14:
+        return "lunch"
+    elif 14 <= h < 18:
+        return "afternoon"
+    else:
+        return "night"
 
 
-def get_user_by_email(db: Session, email: str) -> Optional[User]:
-    return db.query(User).filter(User.email == email).first()
-
-
-def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
-    user = get_user_by_email(db, email)
-    if not user:
-        return None
-    if not verify_password(password, user.hashed_password):
-        return None
-    return user
-
-
-def generate_device_api_key() -> str:
-    return secrets.token_hex(16)
+def get_plant_image(plant_state: str, time_slot: str) -> str:
+    """
+    Sinh tên file ảnh cho frontend.
+    Bạn đã có đủ file:
+    plant_dry_morning.png, plant_dry_lunch.png, ...
+    nên cứ map thẳng như này.
+    """
+    return f"plant_{plant_state}_{time_slot}.png"
 
 
 def get_current_user(
@@ -317,14 +164,19 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
     existing = get_user_by_email(db, user_in.email)
     if existing:
         raise HTTPException(status_code=400, detail="Email đã được đăng ký")
+
     user = User(
         email=user_in.email,
         hashed_password=get_password_hash(user_in.password),
+        gender=user_in.gender,
+        weight_kg=user_in.weight_kg,
+        height_cm=user_in.height_cm,
     )
     db.add(user)
     db.commit()
     db.refresh(user)
     return user
+
 
 
 @app.post("/auth/login", response_model=Token)
@@ -475,6 +327,161 @@ def get_telemetry(
     return rows
 
 
+# ---------- API SUMMARY HÔM NAY ----------
+@app.get("/me/water/summary-today", response_model=WaterSummaryOut)
+def get_today_water_summary(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # Lấy tất cả device của user
+    devices = db.query(Device).filter(Device.owner_id == current_user.id).all()
+    today = (datetime.utcnow() + timedelta(hours=7)).date()
+    daily_target = calc_daily_water_target(current_user)
+    if not devices:
+        # Không có thiết bị nào
+        plant_state = classify_plant_state(0.0)
+        time_slot = get_time_slot()
+        return WaterSummaryOut(
+            date=today.isoformat(),
+            total_ml=0.0,
+            percent=0.0,
+            plant_state=plant_state,
+            time_slot=time_slot,
+            image=get_plant_image(plant_state, time_slot),
+            target_ml=daily_target,
+        )
+
+    device_ids = [d.device_id for d in devices]
+
+    # Khoảng thời gian hôm nay (theo VN time tạm tính = UTC+7)
+    start = datetime(today.year, today.month, today.day) - timedelta(hours=7)
+    end = start + timedelta(days=1)
+
+    # Tổng value telemetry "water_intake_ml" trong ngày
+    total = (
+        db.query(func.sum(Telemetry.value))
+        .filter(
+            Telemetry.device_id.in_(device_ids),
+            Telemetry.metric_type == "water_intake_ml",
+            Telemetry.ts >= start,
+            Telemetry.ts < end,
+        )
+        .scalar()
+        or 0.0
+    )
+
+    total = float(total)
+    daily_target = calc_daily_water_target(current_user)
+    percent = min(total / daily_target * 100.0, 100.0)
+
+    plant_state = classify_plant_state(total)
+    time_slot = get_time_slot()
+    image = get_plant_image(plant_state, time_slot)
+
+    return WaterSummaryOut(
+    date=today.isoformat(),
+    total_ml=total,
+    percent=percent,
+    plant_state=plant_state,
+    time_slot=time_slot,
+    image=image,
+    target_ml=daily_target
+)
+
+
+
+# ---------- API LỊCH SỬ 7 NGÀY ----------
+@app.get("/me/water/history", response_model=WaterHistoryOut)
+def get_water_history(
+    days: int = 7,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Trả về tổng ml theo từng ngày trong N ngày gần nhất (mặc định 7).
+    """
+    if days < 1:
+        days = 1
+    if days > 30:
+        days = 30
+
+    devices = db.query(Device).filter(Device.owner_id == current_user.id).all()
+    today = (datetime.utcnow() + timedelta(hours=7)).date()
+    daily_target = calc_daily_water_target(current_user)
+
+    if not devices:
+        # Không có device: trả list ngày với 0 ml
+        history_days: List[WaterHistoryDay] = []
+        for i in range(days - 1, -1, -1):
+            d = today - timedelta(days=i)
+            history_days.append(
+                WaterHistoryDay(
+                    date=d.isoformat(),
+                    total_ml=0.0,
+                    percent=0.0,
+                )
+            )
+        return WaterHistoryOut(days=history_days)
+
+    device_ids = [d.device_id for d in devices]
+    history_days: List[WaterHistoryDay] = []
+
+    # duyệt từ ngày cũ -> mới để dễ vẽ chart
+    for i in range(days - 1, -1, -1):
+        d: date = today - timedelta(days=i)
+
+        start = datetime(d.year, d.month, d.day) - timedelta(hours=7)
+        end = start + timedelta(days=1)
+
+        total = (
+            db.query(func.sum(Telemetry.value))
+            .filter(
+                Telemetry.device_id.in_(device_ids),
+                Telemetry.metric_type == "water_intake_ml",
+                Telemetry.ts >= start,
+                Telemetry.ts < end,
+            )
+            .scalar()
+            or 0.0
+        )
+        total = float(total)
+        percent = min(total / daily_target * 100.0, 100.0)
+
+        history_days.append(
+            WaterHistoryDay(
+                date=d.isoformat(),
+                total_ml=total,
+                percent=percent,
+            )
+        )
+
+    return WaterHistoryOut(days=history_days)
+
+
+# ---------- API TỔNG HỢP DASHBOARD ----------
+@app.get("/me/water/dashboard", response_model=DashboardOut)
+def get_water_dashboard(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    API tổng hợp cho frontend dashboard:
+    - today: summary hôm nay
+    - last_7_days: lịch sử 7 ngày
+    """
+    today_summary: WaterSummaryOut = get_today_water_summary(
+        db=db, current_user=current_user
+    )
+    history: WaterHistoryOut = get_water_history(
+        days=7, db=db, current_user=current_user
+    )
+
+    return DashboardOut(
+        today=today_summary,
+        last_7_days=history.days,
+    )
+
+
 # ================== FRONTEND ROUTES ==================
 @app.get("/app", include_in_schema=False)
 async def serve_app():
@@ -503,6 +510,7 @@ async def serve_dashboard():
         )
     return FileResponse(dash_file)
 
+
 @app.get("/garden", include_in_schema=False)
 async def serve_garden():
     garden_file = FRONTEND_DIR / "plant.html"
@@ -523,6 +531,11 @@ def serve_forgot_password():
 def serve_reset_password():
     return FileResponse(FRONTEND_DIR / "reset_password.html")
 
+
 @app.get("/", include_in_schema=False)
 def root_redirect():
     return RedirectResponse(url="/app")
+
+@app.get("/water_detail")
+def water_detail_page():
+    return FileResponse("frontend/water_detail.html")
