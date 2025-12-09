@@ -20,19 +20,45 @@ from app.security import (
     send_password_reset_email,
     get_user_by_email,
     verify_password_reset_token,
-    create_user,
 )
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRoter = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register", response_model=UserOut)
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
     """
     Đăng ký tài khoản mới.
-    - Luôn tạo user với role = "user" (logic nằm trong create_user).
+    - Nhận JSON:
+      {
+        "email": "...",
+        "password": "...",
+        "gender": "male|female",
+        "weight_kg": 60,
+        "height_cm": 170
+      }
     """
-    user = create_user(db, user_in)
+    # Kiểm tra trùng email
+    existing = get_user_by_email(db, user_in.email)
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email đã được đăng ký",
+        )
+
+    # Tạo user mới, role mặc định = "user"
+    user = User(
+        email=user_in.email,
+        hashed_password=hash_password(user_in.password),
+        full_name=user_in.full_name,
+        gender=user_in.gender,
+        weight_kg=user_in.weight_kg,
+        height_cm=user_in.height_cm,
+        role="user",
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
     return user
 
 
@@ -43,7 +69,7 @@ def login(
 ):
     """
     Đăng nhập bằng email + password.
-    OAuth2PasswordRequestForm dùng field 'username' cho email.
+    - Frontend gửi form: username=email, password=...
     """
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
@@ -53,7 +79,6 @@ def login(
         )
 
     access_token = create_access_token({"sub": str(user.id)})
-    # Token schema có thể có token_type mặc định là "bearer"
     return Token(access_token=access_token)
 
 
@@ -63,8 +88,8 @@ def forgot_password(
     db: Session = Depends(get_db),
 ):
     """
-    Nhận email, nếu user tồn tại thì gửi mail chứa link reset password.
-    Không lộ thông tin email có tồn tại hay không.
+    Nhận email, nếu tồn tại thì gửi mail reset (nếu cấu hình SMTP).
+    Không tiết lộ email có tồn tại hay không.
     """
     user = get_user_by_email(db, payload.email)
 
@@ -73,7 +98,6 @@ def forgot_password(
         try:
             send_password_reset_email(user.email, reset_token)
         except Exception as e:
-            # Không crash hệ thống vì lỗi SMTP, chỉ log ra
             print("Lỗi gửi email reset mật khẩu:", e)
 
     return {
@@ -87,7 +111,7 @@ def reset_password(
     db: Session = Depends(get_db),
 ):
     """
-    Đặt lại mật khẩu bằng token nhận được qua email.
+    Đặt lại mật khẩu bằng token.
     """
     user_id = verify_password_reset_token(data.token)
     if not user_id:

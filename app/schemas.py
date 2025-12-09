@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, EmailStr, validator
 
 class UserBase(BaseModel):
     email: EmailStr
-    full_name: str
+    full_name: Optional[str] = None
     gender: Optional[str] = None
     weight_kg: Optional[float] = None
     height_cm: Optional[float] = None
@@ -18,8 +18,8 @@ class UserBase(BaseModel):
 
 class UserCreate(BaseModel):
     email: EmailStr
-    full_name: str
     password: str
+    full_name: Optional[str] = None
     gender: Optional[str] = None
     weight_kg: Optional[float] = None
     height_cm: Optional[float] = None
